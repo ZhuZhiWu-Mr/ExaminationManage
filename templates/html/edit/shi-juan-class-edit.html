@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title> 单项项目列表修改</title>
+    <meta name="renderer" content="webkit|ie-comp|ie-stand" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport"
+        content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <link rel="stylesheet" href="../../css/font.css">
+    <link rel="stylesheet" href="../../css/xadmin.css">
+    <script src="../../lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../js/xadmin.js"></script>
+</head>
+
+<body style="background: #fff;padding-right: 10px;">
+    <form style="padding-right: 10px;padding-top:10px"" class=" layui-form" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">试卷名：</label>
+            <div class="layui-input-block">
+                <input type="text" name="shijuanming" lay-verify="required" autocomplete="off" placeholder="试卷名"
+                    class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">选择班级</label>
+            <div class="layui-input-inline">
+                <select id="selectview" name="classes_name" lay-verify="required" lay-search="">
+                    <script nam id="optionTpl" type="text/html">
+						{{{# layui.each(d.data, function(index, item){ }}
+							<option value="{{item.pk}}">{{item.fields.classes_name}}</option>
+						{{# }); }}
+					</script>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo1">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+    <script src="../../config.js"></script>
+    <!-- 注意：如果你直接复制所有代码到本地，上述js路径需要改成你本地的 -->
+    <script>
+        layui.use(['laytpl', 'form', 'layedit', 'laydate', 'layer'], function () {
+            var form = layui.form,
+                layer = layui.layer,
+                layedit = layui.layedit,
+                laytpl = layui.laytpl,
+                laydate = layui.laydate;
+
+            
+
+            $.get(getHost() + "/courses/classes", {
+            }, function (data, status) {
+                if (data.code == 0) {
+                    var getTpl = optionTpl.innerHTML
+                        , selectview = document.getElementById('selectview');
+                    laytpl(getTpl).render(data, function (html) {
+                        selectview.innerHTML = html;
+                    });
+                    form.render("select");
+                } else {
+                    layer.msg(data.msg);
+                }
+            }).error(function () {
+                layer.msg("请检查网络后重试");
+            });
+
+            //监听提交
+            form.on('submit(demo1)', function (data) {
+                data = JSON.stringify(data.field)
+
+                $.post(getHost() + "/courses/list_translate_class", {
+                    addData: data
+                }, function (data, status) {
+                    console.log(data)
+                    if (data.code == 0) {
+                        layer.msg("添加成功，关闭窗口，即可刷新数据");
+                    } else {
+                        layer.msg(data.msg);
+                    }
+
+                }).error(function () {
+                    layer.msg("请检查网络后重试");
+                });
+                // 重置表单
+                // $("form")[0].reset();
+                return false;
+            });
+
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>教师评分</title>
+    <meta name="renderer" content="webkit|ie-comp|ie-stand" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport"
+        content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <link rel="stylesheet" href="../../css/font.css">
+    <link rel="stylesheet" href="../../css/xadmin.css">
+    <script src="../../lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../js/xadmin.js"></script>
+    <!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
+    <style type="text/css">
+        .layui-table-cell {
+            height: auto;
+            white-space: normal;
+    }
+    </style>
+</head>
+
+<body>
+
+    <table class="layui-hide" id="demo" lay-filter="test"></table>
+
+    <script type="text/html" id="barDemo">
+        <button type="button" class="layui-btn layui-btn-xs" lay-event="auto_score_btn">自动评分</button>
+    </script>
+
+    <script type="text/html" id="auto_score_comfirm">
+        {{# if (d.auto_score == -1) { }}
+            无
+        {{# }else{ }}
+            {{d.auto_score}}
+        {{#} }}
+    </script>
+
+    <script type="text/html" id="ren_gon_feng">
+        {{# if (d.user_score == -1) { }}
+            输入分数
+        {{# }else{ }}
+            {{d.user_score}}
+        {{#} }}
+    </script>
+
+    <table style="height: auto;white-space: normal" class="layui-hide" id="demo" lay-filter="test"></table>
+
+    <script src="../../config.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../js/utils.js"></script>
+    <script>
+        layui.config({
+            version: '1615206508080' //为了更新 js 缓存，可忽略
+        });
+        // 判断登录
+        let token = getCookie("token")
+        if (token == "") {
+            window.location.href = "login/login.html";
+        }
+
+        layui.use(['form', 'laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider'], function () {
+
+            var laydate = layui.laydate //日期
+                ,
+                laypage = layui.laypage //分页
+                ,
+                layer = layui.layer //弹层
+                ,
+
+                table = layui.table //表格
+                ,
+                carousel = layui.carousel //轮播
+                ,
+                upload = layui.upload //上传
+                ,
+                element = layui.element //元素操作
+                ,
+                form = layui.form,
+                slider = layui.slider //滑块
+            //监听Tab切换
+            element.on('tab(demo)', function (data) {
+                console.log(data)
+                layer.tips('切换了 ' + data.index + '：' + this.innerHTML, this, {
+                    tips: 1
+                });
+            });
+            // 获取路由参数
+            function RequestParameter() {
+                var url = window.location.search; //获取url中"?"符后的字串
+                var theRequest = new Object();
+                if (url.indexOf("?") != -1) {
+                    var str = url.substr(1);
+                    var strs = str.split("&");
+                    for (var i = 0; i < strs.length; i++) {
+                        theRequest[strs[i].split("=")[0]] = (strs[i].split("=")[1]);
+                    }
+                }
+                return theRequest
+            }
+
+            renderData(RequestParameter()["shijuanpk"]);
+
+            table.render();
+            function renderData(shijuanpk) {
+                //执行一个 table 实例
+                table.render({
+                    elem: '#demo',
+                    // height: 420,
+                    toolbar: 'true', 
+                    url: getHost() + '/courses/student_subject/' + shijuanpk, //数据接口
+                    // url: 'date_test.json',
+                    title: '用户表',
+                    // toolbar: 'default', //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
+                    // cellMinWidth: 80, //全局定义所有常规单元格最小宽度,
+                    parseData: function (res) {
+                        subject_name: res.data
+                    },
+                    cols: [
+                        [{
+                            align: 'center',
+                            title: '编号',
+                            sort: true,
+                            type: 'numbers',
+                            width: 100
+                        },
+                        {
+                            field: 'pk',
+                            title: 'ID',
+                            fixed: 'left',
+                            unresize: true,
+                            sort: true,
+                            align: 'center',
+                            hide: true
+                        }, {
+                            field: 'stu_number',
+                            title: '学号',
+                            sort: true,
+                            width: 150,
+                            align: 'center',
+                        }, {
+                            field: 'the_name',
+                            title: '姓名',
+                            sort: true,
+                            width: 130,
+                            align: 'center',
+                        }, {
+                            field: 'subject_name',
+                            title: '题目',
+                            sort: true,
+                            width: 130,
+                            align: 'center',
+                        }, {
+                            field: 'subject_answer',
+                            title: '教师答案',
+                            sort: true,
+                            align: 'center',
+                        }, {
+                            field: 'user_answer',
+                            title: '学生答案',
+                            sort: true,
+                            align: 'center',
+                        }, {
+                            field: 'auto_score',
+                            title: '自动评分',
+                            sort: true,
+                            width: 100,
+                            align: 'center',
+                            templet: '#auto_score_comfirm'
+                        }, {
+                            field: 'user_score',
+                            title: '人工评分',
+                            edit: 'text',
+                            sort: true,
+                            align: 'center',
+                            templet: '#ren_gon_feng',
+                            width: 100
+                        }, {
+                            fixed: 'right',
+                            title: '操作',
+                            toolbar: '#barDemo',
+                            align: 'center',
+                            width: 200
+                        }]
+                    ],
+
+                    page: true, //开启分页
+                });
+            }
+
+            //监听头工具栏事件
+            table.on('toolbar(test)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id),
+                    data = checkStatus.data; //获取选中的数据
+                switch (obj.event) {
+                    case 'add':
+                        setTop();
+                        break;
+                    case 'update':
+                        layer.alert('请单击表格，修改对应信息，修改之后按回车');
+                        break;
+                    case 'delete':
+                        if (data.length === 0) {
+                            layer.msg('请在右侧删除');
+                        } else {
+                            layer.confirm('确定删除选中的数据吗？', {
+                                icon: 3,
+                                title: '提示信息'
+                            }, function (index) {
+                                //layui中找到CheckBox所在的行，并遍历找到行的顺序
+                                $('div.layui-table-body table tbody input[name="layTableCheckbox"]:checked')
+                                    .each(function () {
+                                        var ids = "";
+                                        for (var i = 0; i < data.length; i++) {
+                                            if (i == data.length - 1) {
+                                                ids += data[i].id
+                                            } else {
+                                                ids += data[i].id + ",";
+                                            }
+                                        }
+                                        // 遍历选中的checkbox
+                                        n = $(this).parents('tbody tr')
+                                            .index() // 获取checkbox所在行的顺序
+                                        //移除行
+                                        $('div.layui-table-body table tbody ')
+                                            .find('tr:eq(' +
+                                                n + ')').remove()
+                                        //如果是全选移除，就将全选CheckBox还原为未选中状态
+                                        $('div.layui-table-header table thead div.layui-unselect.layui-form-checkbox')
+                                            .removeClass('layui-form-checked')
+
+                                        $.post(getHost() + "/delete_all_projects_undertaken", {
+                                            deleteData: ids
+                                        },
+                                            function (data, status) {
+                                                if (data.code == 0) {
+                                                    layer.msg("删除成功");
+                                                } else {
+                                                    layer.msg("已经删除，请刷新页面");
+                                                }
+                                            }).error(function () {
+                                                layer.msg("请检查网络后重试");
+                                            });
+                                    })
+                                layer.close(index)
+                            })
+
+
+                        }
+                        break;
+                };
+            });
+
+
+            //监听行工具事件
+            table.on('tool(test)', function (obj) { //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+                var data = obj.data, // 获得当前行数据
+                    layEvent = obj.event; //获得 lay-event 对应的值
+                if (layEvent === 'detail') {
+                    console.log(data)
+                    setShiJuanDtails(data.pk, data.class_name);
+                } else if (layEvent === 'user_score_confirm') {
+                    alert(data)
+                    if (data.user_score_input == "" || data.user_score_input == undefined) {
+                        layer.msg("请输入分数");
+                        return false;
+                    }
+                    layer.msg("确认操作")
+                    return false
+                } else if (layEvent === 'auto_score_btn') {
+                    $.post(getHost() + "/courses/auto_score_subject", {
+                        pk: data.pk,
+                        token: token
+                    }, function (data, status) {
+                        layer.msg("自动评分成功：" + data.data.score + "分");
+                        obj.update({
+                            auto_score: data.data.score,
+                        });
+                    }).error(function () {
+                        layer.msg("请检查网络后重试");
+                    });
+                } else if (layEvent === 'auto_score_event') {
+                    $.post(getHost() + "/courses/put_student_score/" + data.pk, {
+                        column: 'is_auto_score',
+                        tarValue: 1
+                    }, function (data, status) {
+                        layer.msg("确认成功");
+
+                    }).error(function () {
+                        layer.msg("请检查网络后重试");
+                    });
+                } else if (layEvent === 'del') {
+                    layer.confirm('真的删除行么', function (index) {
+                        obj.del(); //删除对应行（tr）的DOM结构
+                        layer.close(index);
+                        //向服务端发送删除指令
+                        $.post(getHost() + "/courses/del_translate_class/" + data.pk, {
+                            id: data.id
+                        }, function (data, status) {
+                            layer.msg('删除成功');
+                        }).error(function () {
+                            layer.msg("请检查网络后重试");
+                        });
+                    });
+                } else if (layEvent === 'edit') {
+                    layer.msg('编辑操作');
+                }
+            });
+
+            //监听单元格编辑
+            table.on('edit(test)', function (obj) {
+                var value = obj.value //得到修改后的值
+                    ,
+                    data = obj.data //得到所在行所有键值
+                    ,
+                    field = obj.field; //得到字段
+                lineId = obj.data.id
+
+                $.post(getHost() + "/courses/put_student_score/" + data.pk, {
+                    column: field,
+                    tarValue: value
+                }, function (data, status) {
+                    layer.msg("修改成功");
+                }).error(function () {
+                    layer.msg("请检查网络后重试");
+                });
+            });
+            //分页
+            laypage.render({
+                elem: '#test', //分页容器的id
+
+                count: 100, //总页数
+
+                skin: '#1E9FFF', //自定义选中色值
+                //,skip: true //开启跳页
+
+                jump: function (obj, first) {
+                    if (!first) {
+                        layer.msg('第' + obj.curr + '页', {
+                            offset: 'b'
+                        });
+                    }
+                }
+            });
+
+        });
+    </script>
+</body>
+
+</html>

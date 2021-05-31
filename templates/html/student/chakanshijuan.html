@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>考试页面</title>
+  <meta name="renderer" content="webkit|ie-comp|ie-stand" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="viewport"
+    content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <link rel="stylesheet" href="../../css/font.css">
+  <link rel="stylesheet" href="../../css/xadmin.css">
+  <script src="../../js/jquery.min.js"></script>
+  <script src="../../lib/layui/layui.js" charset="utf-8"></script>
+  <script type="text/javascript" src="../../js/xadmin.js"></script>
+  <!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
+
+</head>
+
+<body style="background: #fff;">
+  <script id="optionTpl" type="text/html">
+    {{# layui.each(d,function(index, item){ }}
+    <table class="layui-table" style="margin-top: 20px;">
+      <colgroup>
+        <col width="50">
+
+      </colgroup>
+      <thead>
+        <tr>
+          <th>{{index+1}}</th>
+          <th>{{item.subject_name}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>参考答案：</td>
+          <td>{{item.subject_answer}}</td>
+        </tr>
+        <tr>
+          <td>用户答案：</td>
+          <td>{{item.user_subject_answer}}</td>
+        </tr>
+        <tr>
+          <td>试题分数：</td>
+          <td>{{item.score}}</td>
+        </tr>
+
+        <tr>
+          <td>自动评分：</td>
+          <td>{{item.auto_score}}</td>
+        </tr>
+        <tr>
+          <td>人工评分：</td>
+          <td>{{item.user_score}}</td>
+        </tr>
+      </tbody>
+    </table>
+    {{# }); }}
+  </script>
+  <div id="view"></div>
+  </div>
+  <script src="../../config.js"></script>
+  <script src="../../js/utils.js"></script>
+  <script>
+    let token = getCookie("token")
+    // 判断登录
+    if (getCookie("token") == "") {
+      window.location.href = "login/login.html";
+    }
+
+    //一般直接写在一个js文件中
+    layui.use(['form', 'layedit', 'laydate', 'layer', 'laytpl'], function () {
+      var form = layui.form,
+        layer = layui.layer,
+        layedit = layui.layedit,
+        laytpl = layui.laytpl,
+        laydate = layui.laydate;
+
+
+      // 获取路由参数
+      function RequestParameter() {
+        var url = window.location.search; //获取url中"?"符后的字串
+        var theRequest = new Object();
+        if (url.indexOf("?") != -1) {
+          var str = url.substr(1);
+          var strs = str.split("&");
+          for (var i = 0; i < strs.length; i++) {
+            theRequest[strs[i].split("=")[0]] = (strs[i].split("=")[1]);
+          }
+        }
+        return theRequest
+      }
+      let shijuanpk = RequestParameter()["shijuanpk"]
+      // 题目数据
+      $.post(getHost() + "/courses/list_stu_answer_subject", {
+        pk: shijuanpk,
+        token:token
+      }, function (data, status) {
+        console.log(data)
+        if (data.code == 0) {
+          //渲染模版
+          // data.data = [{"test":"1"},{"test":"1"},{"test":"1"}]
+          var getTpl = optionTpl.innerHTML
+            , view = document.getElementById('view');
+          laytpl(getTpl).render(data.data, function (html) {
+            view.innerHTML = html;
+          });
+          form.render();
+        } else {
+          layer.msg(data.msg);
+        }
+
+      }).error(function () {
+        layer.msg("请检查网络后重试");
+      });
+
+      //自定义验证规则
+      form.verify({
+        test: function (value) {
+          // layedit.sync(textArea)
+          return layedit.sync(textarea_test)
+        }
+      });
+      var textArea = layedit.build('textarea_test', {
+        tool: [
+          'strong' //加粗
+          , 'italic' //斜体
+          , 'underline' //下划线
+          , 'del' //删除线
+          , '|' //分割线
+          , 'left' //左对齐
+          , 'center' //居中对齐
+          , 'right' //右对齐
+          , 'link' //超链接
+          , 'unlink' //清除链接
+          , 'face' //表情
+          , 'help' //帮助
+        ]
+      }); //建立编辑器器
+
+      //监听提交
+      form.on('submit(demo1)', function (data) {
+        data = JSON.stringify(data.field)
+        console.log(data)
+
+        $.post(getHost() + "/courses/put_batch_student_subject", {
+          answerData: data,
+          token: token
+        }, function (data, status) {
+          console.log(data)
+          if (data.code == 0) {
+            //渲染模版
+            layer.msg("提交成功")
+            form.render();
+          } else {
+            layer.msg(data.msg);
+          }
+
+        }).error(function () {
+          layer.msg("请检查网络后重试");
+        });
+
+        return false;
+      });
+    });
+  </script>
+
+</body>
+
+</html>

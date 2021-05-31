@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>考试页面</title>
+    <meta name="renderer" content="webkit|ie-comp|ie-stand" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport"
+        content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <link rel="stylesheet" href="../../css/font.css">
+    <link rel="stylesheet" href="../../css/xadmin.css">
+    <script src="../../js/jquery.min.js"></script>
+    <script src="../../lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../js/xadmin.js"></script>
+    <!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
+
+</head>
+
+<body style="background: #fff">
+
+    <div class="x-nav">
+        <span class="layui-breadcrumb">
+            <a href="">人个信息</a>
+            <!-- <a href="">演示</a> -->
+            <!-- <a><cite>导航元素</cite></a> -->
+        </span>
+        <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"
+            onclick="location.reload()" title="刷新">
+            <i class="layui-icon layui-icon-refresh" style="line-height:30px"></i></a>
+    </div>
+
+    <script id="optionTpl" type="text/html">
+        <div class="layui-form-item">
+            <label class="layui-form-label">真实姓名：</label>
+            <div class="layui-input-inline">
+                <input type="text" name="the_name" lay-verify="pass" placeholder="姓名" autocomplete="off" value="{{d.the_name}}"
+                    class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">学号：</label>
+            <div class="layui-input-inline">
+                <input type="text" name="stu_number" lay-verify="pass" placeholder="学号" autocomplete="off" value="{{d.stu_number}}"
+                    class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">昵称：</label>
+            <div class="layui-input-inline">
+                <input type="text" name="nick_name" lay-verify="pass" placeholder="昵称" autocomplete="off" value="{{d.nick_name}}"
+                    class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="width: 30%;">
+            <label class="layui-form-label">班级：</label>
+            <div class="layui-input-block">
+                <select id="classes_view" name="classes" lay-filter="aihao" lay-verify="required">
+                    <!-- {{# if(d.classes_name == ""){ }}
+
+                        {{# layui.each(d.classes, function(index, item){ }}
+                            <option value="{{item.id}}">{{item.classes_name}}</option>
+                        {{# }); }}
+                    {{# }else { }} -->
+                        <option value="{{d.classes_id}}">{{d.classes_name}}</option>
+                    <!-- {{# } }} -->
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">密码：</label>
+            <div class="layui-input-inline">
+                <input type="text" name="passwd" lay-verify="required" placeholder="请输入密码" autocomplete="off" value="{{d.passwd}}"
+                    class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo1">立即修改</button>
+            </div>
+        </div>
+    </script>
+
+
+    <form id="form_view" class="layui-form" action="" style="padding-top: 1%;">
+    </form>
+
+    <script src="../../config.js"></script>
+    <script src="../../js/utils.js"></script>
+    <script>
+        // 判断登录
+        let token = getCookie("token")
+        console.log(token)
+        if (token == "") {
+            window.location.href = "login/login.html";
+        }
+
+        layui.use(['form', 'layedit', 'laydate', 'laytpl'], function () {
+            var form = layui.form
+                , layer = layui.layer
+                , layedit = layui.layedit
+                , laytpl = layui.laytpl
+                , laydate = layui.laydate;
+            var data = {
+                "data": {
+                    "user_name": "test_name",
+                    "nick_name": "昵称",
+                    "stu_number": "number"
+                }
+            }
+
+            $.post(getHost() + '/users/list_user_profile', {
+                token: token
+            }, function (data, status) {
+                if (data.code == 0) {
+                    var getTpl = optionTpl.innerHTML
+                        , form_view = document.getElementById('form_view');
+                    laytpl(getTpl).render(data.data, function (html) {
+                        form_view.innerHTML = html;
+                    });
+                    form.render("select");
+                } else {
+                    layer.msg(data.msg)
+                }
+
+            })
+
+            //监听提交
+            form.on('submit(demo1)', function (data) {
+                data = JSON.stringify(data.field)
+                console.log(data)
+                $.post(getHost() + '/users/put_user_profile', {
+                    token: token,
+                    data:data
+                }, function (data, status) {
+                    if (data.code == 0) {
+                       layer.msg("修改成功")
+                       layer.render("select")
+                       return false
+                    } else {
+                        layer.msg(data.msg)
+                    }
+                })
+                return false;
+            });
+        });
+    </script>
+</body>
+
+</html>
