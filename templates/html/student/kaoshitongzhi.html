@@ -2,287 +2,249 @@
 <html>
 
 <head>
-	<meta charset="utf-8">
-	<title></title>
-	<meta name="renderer" content="webkit|ie-comp|ie-stand" />
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-	<meta name="viewport"
-		content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
-	<meta http-equiv="Cache-Control" content="no-siteapp" />
-	<link rel="stylesheet" href="../../css/font.css">
-	<link rel="stylesheet" href="../../css/xadmin.css">
-	<script src="../../js/jquery.min.js"></script>
-	<script src="../../lib/layui/layui.js" charset="utf-8"></script>
-	<script type="text/javascript" src="../../js/xadmin.js"></script>
-	<!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
+    <meta charset="utf-8">
+    <title></title>
+    <meta name="renderer" content="webkit|ie-comp|ie-stand"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi"/>
+    <meta http-equiv="Cache-Control" content="no-siteapp"/>
+    <link rel="stylesheet" href="../../css/font.css">
+    <link rel="stylesheet" href="../../css/xadmin.css">
+    <script src="../../js/jquery.min.js"></script>
+    <script src="../../lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../js/xadmin.js"></script>
+    <!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
 </head>
 
-<body style="background-color:#fff"">
+<body style="background-color:#fff">
 
-	<script type="text/html" id="barDemo">
-			<!-- <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a> -->
-	<a class="layui-btn layui-btn-xs" lay-event="add">开始考试</a>
-	<a class="layui-btn layui-btn-xs" lay-event="show_shijuan">查看试卷</a>
-	</script>
+<script type="text/html" id="barDemo">
+    <!-- <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a> -->
+    <a class="layui-btn layui-btn-xs" lay-event="add">开始考试</a>
+    <a class="layui-btn layui-btn-xs" lay-event="show_shijuan">查看试卷</a>
+</script>
 
-	<div class="x-nav">
+<div class="x-nav">
         <span class="layui-breadcrumb">
             <a href="">我的考试</a>
             <!-- <a href="">演示</a> -->
             <!-- <a><cite>导航元素</cite></a> -->
         </span>
-        <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"
-            onclick="location.reload()" title="刷新">
-            <i class="layui-icon layui-icon-refresh" style="line-height:30px"></i></a>
-    </div>
-	<table class="layui-hide" id="demo" lay-filter="test">
+    <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"
+       onclick="location.reload()" title="刷新">
+        <i class="layui-icon layui-icon-refresh" style="line-height:30px"></i>
+    </a>
+</div>
+<table class="layui-hide" id="demo" lay-filter="test">
 
 
-	</table>
+</table>
 
-	<script src="../../config.js" type="text/javascript" charset="utf-8"></script>
-	<script src="../../js/utils.js"></script>
+<script src="../../config.js" type="text/javascript" charset="utf-8"></script>
+<script src="../../js/utils.js"></script>
 
-	<script>
-		let token = getCookie("token")
-		// 判断登录
-		if (getCookie("token") == "") {
-			window.location.href = "login/login.html";
-		}
-		layui.config({
-			version: '1615206508080' //为了更新 js 缓存，可忽略
-		});
+<script>
+    let token = getCookie("token")
+    // 判断登录
+    if (getCookie("token") == "") {
+        window.location.href = "login/login.html";
+    }
+    layui.config({
+        version: '1615206508080' //为了更新 js 缓存，可忽略
+    });
 
-		layui.use(['laytpl', 'laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider', 'form'], function () {
+    layui.use(['laytpl', 'laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider', 'form'], function () {
 
-			var laydate = layui.laydate //日期
-				,
-				laypage = layui.laypage //分页
-				,
-				layer = layui.layer //弹层
-				,
+        var laydate = layui.laydate //日期
+            ,
+            laypage = layui.laypage //分页
+            ,
+            layer = layui.layer //弹层
+            ,
 
-				table = layui.table //表格
-				,
-				carousel = layui.carousel //轮播
-				,
-				upload = layui.upload //上传
-				,
-				element = layui.element //元素操作
-				,
-				slider = layui.slider, //滑块
-				laytpl = layui.laytpl,
-				flow = layui.flow,
-				form = layui.form
-
-
-			//监听Tab切换
-			element.on('tab(demo)', function (data) {
-				console.log(data)
-				layer.tips('切换了 ' + data.index + '：' + this.innerHTML, this, {
-					tips: 1
-				});
-			});
-			renderData();
+            table = layui.table //表格
+            ,
+            carousel = layui.carousel //轮播
+            ,
+            upload = layui.upload //上传
+            ,
+            element = layui.element //元素操作
+            ,
+            slider = layui.slider, //滑块
+            laytpl = layui.laytpl,
+            flow = layui.flow,
+            form = layui.form
 
 
-			function renderData() {
-				//执行一个 table 实例
-				table.render({
-					elem: '#demo',
-					// height: 420,
-					// toolbar: '#toolbarDemo',
-					method: 'post',
-					url: getHost() + '/courses/list_stu_translate_class', //数据接口
-					where: {
-						token: token
-					},
-
-					title: '用户表',
-					// toolbar: 'default', //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
-					cellMinWidth: 80, //全局定义所有常规单元格最小宽度,
-					parseData: function (res) {
-						subject_name: res.data
-					},
-					cols: [
-						[{
-							align: 'center',
-							title: '编号',
-							sort: true,
-							type: 'numbers',
-							width: 100
-						},
-						{
-							field: 'pk',
-							title: 'ID',
-							fixed: 'left',
-							unresize: true,
-							sort: true,
-							align: 'center',
-							width: 0,
-							hide: true
-						}, {
-							field: 'class_name',
-							title: '试卷',
-							sort: true,
-							align: 'center',
-						}, {
-							field: 'start_time',
-							title: '试卷',
-							sort: true,
-							align: 'center',
-						}, {
-							field: 'end_time',
-							title: '试卷',
-							sort: true,
-							align: 'center',
-						}, {
-							fixed: 'right',
-							title: '操作',
-							toolbar: '#barDemo',
-							align: 'center',
-							width: 200
-						}]
-					],
-					page: true, //开启分页
-				});
-			}
-
-			//监听头工具栏事件
-			table.on('toolbar(test)', function (obj) {
-				var checkStatus = table.checkStatus(obj.config.id),
-					data = checkStatus.data; //获取选中的数据
-				switch (obj.event) {
-					case 'add':
-						setTop();
-						break;
-					case 'show_shijuan':
-						layer.alert('请单击表格，修改对应信息，修改之后按回车');
-						break;
-				};
-			});
-
-			//监听行工具事件
-			table.on('tool(test)', function (obj) { //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
-				var data = obj.data, // 获得当前行数据
-					layEvent = obj.event; //获得 lay-event 对应的值
-				if (layEvent === 'show_shijuan') {
-					showShijuan(data.pk, data.class_name)
-				} else if (layEvent === 'add') {
-					console.log(data)
-					setShiJuanDtails(data.pk, data.class_name)
-				}
-			});
-
-			// 添加弹窗
-			function showShijuan(shi_juan_pk, class_name) {
-				var that = this;
-				//多窗口模式，层叠置顶
-				layer.open({
-					type: 2 //此处以iframe举例
-					,
-					title: class_name + "试卷下包含的题目",
-					skin: 'layui-layer-rim',
-					area: ['800px', '500px'],
-					shade: 0,
-					maxmin: true,
-					end: function () {
-						// 弹窗关闭，刷新数据
-						renderData();
-					},
-					content: 'chakanshijuan.html?shijuanpk=' + shi_juan_pk,
-					// btn: ['提交', '关闭'] //只是为了演示
-					yes: function () {
-						$(that).click();
-					},
-					btn2: function () {
-						layer.closeAll();
-					}
-
-					,
-					zIndex: layer.zIndex //重点1
-					,
-					success: function (layero) {
-						layer.setTop(layero); //重点2
-					}
-				});
-			}
-
-			// 添加弹窗
-			function setShiJuanDtails(shi_juan_pk, class_name) {
-				var that = this;
-				//多窗口模式，层叠置顶
-				layer.open({
-					type: 2 //此处以iframe举例
-					,
-					title: class_name + "试卷下包含的题目",
-					skin: 'layui-layer-rim',
-					area: ['800px', '500px'],
-					shade: 0,
-					maxmin: true,
-					end: function () {
-						// 弹窗关闭，刷新数据
-						renderData();
-					},
-					content: 'kaoshiyemian.html?shijuanpk=' + shi_juan_pk,
-					// btn: ['提交', '关闭'] //只是为了演示
-					yes: function () {
-						$(that).click();
-					},
-					btn2: function () {
-						layer.closeAll();
-					}
-
-					,
-					zIndex: layer.zIndex //重点1
-					,
-					success: function (layero) {
-						layer.setTop(layero); //重点2
-					}
-				});
-			}
-
-			//监听单元格编辑
-			table.on('edit(test)', function (obj) {
-				var value = obj.value //得到修改后的值
-					,
-					data = obj.data //得到所在行所有键值
-					,
-					field = obj.field; //得到字段
-				lineId = obj.data.id
-
-				$.post(getHost() + "/courses/put_subjects/" + data.pk, {
-					column: field,
-					tarValue: value
-				}, function (data, status) {
-					layer.msg("修改成功");
-					renderData();
-				}).error(function () {
-					layer.msg("请检查网络后重试");
-				});
-			});
-			//分页
-			laypage.render({
-				elem: '#test', //分页容器的id
-
-				count: 100, //总页数
-
-				skin: '#1E9FFF', //自定义选中色值
-				//,skip: true //开启跳页
-
-				jump: function (obj, first) {
-					if (!first) {
-						layer.msg('第' + obj.curr + '页', {
-							offset: 'b'
-						});
-					}
-				}
-			});
-
-		});
+        //监听Tab切换
+        element.on('tab(demo)', function (data) {
+            console.log(data)
+            layer.tips('切换了 ' + data.index + '：' + this.innerHTML, this, {
+                tips: 1
+            });
+        });
+        renderData();
 
 
-	</script>
+        function renderData() {
+            //执行一个 table 实例
+            table.render({
+                elem: '#demo',
+                // height: 420,
+                // toolbar: '#toolbarDemo',
+                method: 'post',
+                url: getHost() + '/courses/list_stu_translate_class', //数据接口
+                where: {
+                    token: token
+                },
+
+                title: '用户表',
+                // toolbar: 'default', //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
+                cellMinWidth: 80, //全局定义所有常规单元格最小宽度,
+                parseData: function (res) {
+                    subject_name: res.data
+                },
+                cols: [
+                    [{
+                        align: 'center',
+                        title: '编号',
+                        sort: true,
+                        type: 'numbers',
+                        width: 100
+                    },
+                        {
+                            field: 'pk',
+                            title: 'ID',
+                            fixed: 'left',
+                            unresize: true,
+                            sort: true,
+                            align: 'center',
+                            width: 0,
+                            hide: true
+                        }, {
+                        field: 'class_name',
+                        title: '试卷',
+                        sort: true,
+                        align: 'center',
+                    }, {
+                        field: 'start_time',
+                        title: '开始时间',
+                        sort: true,
+                        align: 'center',
+                    }, {
+                        field: 'end_time',
+                        title: '结束时间',
+                        sort: true,
+                        align: 'center',
+                    }, {
+                        fixed: 'right',
+                        title: '操作',
+                        toolbar: '#barDemo',
+                        align: 'center',
+                        width: 200
+                    }]
+                ],
+                page: true, //开启分页
+            });
+        }
+
+        //监听行工具事件
+        table.on('tool(test)', function (obj) { //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+            var data = obj.data, // 获得当前行数据
+                layEvent = obj.event; //获得 lay-event 对应的值
+            if (layEvent === 'show_shijuan') {
+                showShijuan(data.pk, data.class_name)
+            } else if (layEvent === 'add') {
+                setShiJuanDtails(data.pk, data.class_name)
+            }
+        });
+
+        // 添加弹窗
+        function showShijuan(shi_juan_pk, class_name) {
+
+            var that = this;
+            //多窗口模式，层叠置顶
+            layer.open({
+                type: 2 //此处以iframe举例
+                ,
+                title: class_name + "试卷下包含的题目",
+                skin: 'layui-layer-rim',
+                area: ['800px', '500px'],
+                shade: 0,
+                maxmin: true,
+                end: function () {
+                    // 弹窗关闭，刷新数据
+                    renderData();
+                },
+                content: 'chakanshijuan.html?shijuanpk=' + shi_juan_pk,
+                // btn: ['提交', '关闭'] //只是为了演示
+                yes: function () {
+                    $(that).click();
+                },
+                btn2: function () {
+                    layer.closeAll();
+                }
+
+                ,
+                zIndex: layer.zIndex //重点1
+                ,
+                success: function (layero) {
+                    layer.setTop(layero); //重点2
+                }
+            });
+        }
+
+        // 添加弹窗
+        function setShiJuanDtails(shi_juan_pk, class_name) {
+            /*
+            shi_juan_pk: 试卷id
+            class_name: 试卷名
+             */
+            window.open(["../student/examination.html?testPaperId=", shi_juan_pk, "&className=", class_name].join(""));
+        }
+
+        //监听单元格编辑
+        table.on('edit(test)', function (obj) {
+            var value = obj.value //得到修改后的值
+                ,
+                data = obj.data //得到所在行所有键值
+                ,
+                field = obj.field; //得到字段
+            lineId = obj.data.id
+
+            $.post(getHost() + "/courses/put_subjects/" + data.pk, {
+                column: field,
+                tarValue: value
+            }, function (data, status) {
+                layer.msg("修改成功");
+                renderData();
+            }).error(function () {
+                layer.msg("请检查网络后重试");
+            });
+        });
+        //分页
+        laypage.render({
+            elem: '#test', //分页容器的id
+
+            count: 100, //总页数
+
+            skin: '#1E9FFF', //自定义选中色值
+            //,skip: true //开启跳页
+
+            jump: function (obj, first) {
+                if (!first) {
+                    layer.msg('第' + obj.curr + '页', {
+                        offset: 'b'
+                    });
+                }
+            }
+        });
+
+    });
+
+
+</script>
 </body>
 
 </html>

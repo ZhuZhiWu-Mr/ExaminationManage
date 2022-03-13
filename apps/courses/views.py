@@ -62,6 +62,7 @@ class PutSubjects(View):
             return JsonResponse(result)
 
         column = request.POST.get("column", "")
+        '1'.lower()
         tar_value = request.POST.get("tarValue", "")
         print(column)
         if column == "subject_name":
@@ -371,12 +372,12 @@ class StudentSubjectView(View):
 
 class StartSubjects(View):
     def post(self, request, pk):
-        '''
+        """
         根据试卷id,查看所有学生的题目
         :param request:
         :param pk:
         :return:
-        '''
+        """
         result = {"code": err_code.SUCCESS, "msg": "", "data": []}
         token = request.POST.get("token", "")
         if not check_token(token):
@@ -404,9 +405,7 @@ class StartSubjects(View):
         print(user_profile.id, '==', pk)
         re_student_subjects = StudentSubject.objects.filter(userprofile_id=user_profile.id, translate_class=pk)
         for re_subject in re_student_subjects:
-            re = {}
-            re["pk"] = re_subject.id
-            re["subject_name"] = re_subject.subject.subject_name
+            re = {"pk": re_subject.id, "subject_name": re_subject.subject.subject_name}
             result["data"].append(re)
 
         result["count"] = re_student_subjects.count()

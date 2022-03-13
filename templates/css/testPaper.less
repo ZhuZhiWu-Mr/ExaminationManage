@@ -1,0 +1,447 @@
+#app {
+    overflow: visible;
+    background: #d3ebff;
+}
+
+html {
+    background: #d3ebff;
+}
+
+.w {
+    position: relative;
+    width: 1200px;
+    margin: 0 auto;
+    padding: 0 10px;
+    box-sizing: border-box;
+    padding-bottom: 40px;
+}
+
+.testPaper .title,
+.topics,
+.topic-nav {
+    background: #fafafa;
+    border-radius: 2px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
+}
+
+.testPaper {
+    .test-content {}
+
+    .topics {
+        float: left;
+        width: 812px;
+        box-sizing: border-box;
+        padding: 16px;
+        margin-bottom: 30px;
+    }
+}
+
+
+.testPaper .title {
+    // height: 128px;
+    padding: 10px 30px 10px 30px;
+    margin-bottom: 10px;
+
+    .testName .el-input__inner {
+        margin: 0 0 20px 40px;
+        border: none;
+        background: rgba(255, 255, 255, 0);
+        font-size: 20px;
+        color: #333;
+        font-weight: bold;
+        text-decoration: underline;
+    }
+
+    ul {
+        margin-bottom: 10px;
+    }
+
+    ul::after {
+        content: '';
+        display: block;
+        clear: both;
+    }
+
+    .test-info {
+        float: left;
+        margin-right: 40px;
+
+        i {
+            color: #333;
+            position: relative;
+            top: 2px;
+            left: 2px;
+
+        }
+    }
+
+    .test-info:last-child {
+        margin: 0;
+    }
+
+    .user-info {
+        float: left;
+        margin-top: 10px;
+        margin-right: 40px;
+    }
+
+    .el-input-number {
+        width: 72px;
+    }
+
+    .el-input-number.is-controls-right .el-input__inner {
+        padding-left: 0px;
+        padding-right: 28px;
+    }
+}
+
+.testPaper .title.fixed {
+    position: fixed;
+    z-index: 999;
+    top: 0;
+    width: 1180px;
+    box-sizing: border-box;
+    padding: 14px 30px 0px 30px;
+}
+
+
+
+.topics .topic {
+    .bigQuestionName {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .bigQuestionName h4 {
+        margin: 20px 0;
+    }
+
+    .bigQuestionName .allScore {
+        margin: 20px 0;
+
+    }
+
+    .bigQuestionName .allScore button {
+        height: 28px;
+    }
+
+    .bigQuestionName .allScore button.active {
+        background: #666;
+        color: #fff;
+    }
+
+    .bigQuestionName .allScore .el-input {
+        position: absolute;
+        top: -30px;
+        right: 0;
+        width: 120px;
+
+    }
+
+    .bigQuestionName .allScore .el-input::before {
+        content: '';
+        display: inline-block;
+        position: absolute;
+        bottom: -4px;
+        left: 7px;
+        transform: rotate(-45deg);
+        width: 8px;
+        height: 8px;
+        border: 1px solid transparent;
+        border-left: 1px solid #DCDFE6;
+        border-bottom: 1px solid #DCDFE6;
+    }
+
+    .bigQuestionName .allScore .el-input::after {
+        content: '';
+        display: inline-block;
+        position: absolute;
+        bottom: -3px;
+        left: 8px;
+        transform: rotate(-45deg);
+        border: 4px solid transparent;
+        border-left: 4px solid #fff;
+        border-bottom: 4px solid #fff;
+    }
+
+
+    .topic-content {
+        position: relative;
+        padding: 10px 8px;
+        border-radius: 8px;
+    }
+
+    .topic-content.isEdit {
+        // background: #f5f5f5;
+    }
+
+    .topic-content ._location {
+        position: absolute;
+        top: -50px;
+        width: 10px;
+        height: 10px;
+    }
+
+    .required-symbol{
+        color: red;
+    }
+
+    .question {
+        margin-bottom: 20px;
+        font-size: 16px;
+        line-height: 26px;
+        color: #333;
+    }
+
+    .question .el-textarea {
+        width: 730px;
+    }
+
+
+    .el-radio,
+    .el-checkbox {
+        width: 600px;
+        margin-bottom: 2px;
+    }
+
+    .userAnswer .el-textarea {
+        width: 500px;
+    }
+
+    .userAnswer .topicNavIndex {
+        display: inline-block;
+        width: 30px;
+    }
+
+    .score {
+        float: right;
+    }
+
+    .addRadios {
+        margin: 4px 0 0 30px;
+    }
+
+    .delRadios.el-button {
+        position: relative;
+        top: -2px;
+        padding: 4px 4px;
+        margin-left: 12px;
+    }
+
+    .correctAnswer{
+        padding-left: 12px;
+    }
+
+    .topicScore,
+    .difficulty,
+    .required {
+        display: inline-block;
+        box-sizing: border-box;
+        width: 33%;
+        padding: 0 12px;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
+    .difficulty .el-input {
+        width: 120px;
+    }
+
+    .analysis,
+    .correct_answer {
+        padding: 0 10px;
+        font-size: 14px;
+    }
+
+    .el-radio,
+    .el-checkbox {
+        display: block;
+        margin-left: 20px;
+        color: #222;
+    }
+
+    .el-radio__label,
+    .el-checkbox__label {
+        font-size: 16px;
+        line-height: 30px;
+        word-wrap: break-word;
+        white-space: normal;
+    }
+
+    .el-checkbox__input {
+        float: left;
+        margin-top: 8px;
+    }
+
+    .fillInBlank .el-textarea {
+        width: 50%;
+        margin-left: 30px;
+        margin-top: 10px;
+    }
+
+    .text .el-textarea {
+        width: 400px;
+        margin: 4px 0 0 30px;
+    }
+
+    .text .addRadios {
+        margin-bottom: 10px;
+    }
+
+    .newTopic {
+        margin: 10px 0;
+        padding: 10px 0;
+        text-align: center;
+        color: #64a9e3;
+        border: 1px solid #64a9e3;
+        cursor: pointer;
+    }
+
+}
+
+
+
+.testPaper .topic-nav {
+    float: right;
+    box-sizing: border-box;
+    width: 356px;
+    min-height: 300px;
+    padding: 14px;
+
+    .tool {
+        display: flex;
+        justify-content: space-between;
+        width: 200px;
+        height: 30px;
+        margin: 0 auto;
+
+
+        .el-button {
+            padding: 6px 10px;
+        }
+    }
+
+    .topic-nav-describe {
+        width: 140px;
+        margin: 0 auto;
+        font-size: 14px;
+
+        .topic-nav-but {
+            display: inline-block;
+            position: relative;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            color: #64a9e3;
+            border: 1px solid #64a9e3;
+            border-radius: 2px;
+        }
+
+        .topic-nav-but.hasAnswer {
+            background-color: #64a9e3;
+            color: #fff;
+        }
+
+        .space {
+            display: inline-block;
+
+            width: 20px;
+        }
+    }
+
+    .topic-nav-item {
+        margin-bottom: 10px;
+    }
+
+    .nav-title {
+        width: 50px;
+        font-size: 14px;
+        margin-left: 10px;
+    }
+
+    .topic-nav-button {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        margin: 10px 6px 0 8px;
+        color: #64a9e3;
+        border: 1px solid #64a9e3;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: 0.5s;
+    }
+
+    .topic-nav-button.hasAnswer {
+        background-color: #64a9e3;
+        color: #fff;
+    }
+}
+
+.topic-nav.isFixed {
+    position: absolute;
+    top: 154px;
+    right: 10px;
+    // transform: 0.5s;
+}
+
+.testPaper .back-top {
+    position: fixed;
+    bottom: 50px;
+    right: 100px;
+    background: #fff;
+    color: #333;
+    font-size: 18px;
+    border-radius: 2px;
+    padding: 6px 8px;
+    cursor: pointer;
+}
+
+.el-radio.is-disabled.is-checked .el-radio__input.is-disabled+span.el-radio__label,
+.el-checkbox.is-disabled.is-checked .el-checkbox__input.is-disabled+span.el-checkbox__label {
+    color: #409EFF;
+}
+
+.topic-nav-button.correct,
+.topic-nav-but.correct{
+    background:#02c39a !important;
+    border:1px solid #02c39a !important;
+    color: #fff !important;
+}
+.topic-nav-button.error,
+.topic-nav-but.error{
+    background: #ff6b6b;
+    border:1px solid #ff6b6b !important;
+    color: #fff !important;
+
+}
+
+.test-content.publishScore .el-radio.is-disabled.is-checked .el-radio__input.is-disabled + span.el-radio__label, 
+.test-content.publishScore .el-checkbox.is-disabled.is-checked .el-checkbox__input.is-disabled + span.el-checkbox__label{
+    color: #ff6b6b;
+}
+
+.el-radio.is-disabled.is-checked.correct .el-radio__input.is-disabled + span.el-radio__label, 
+.el-checkbox.is-disabled.is-checked.correct .el-checkbox__input.is-disabled + span.el-checkbox__label{
+    color: #02c39a !important;
+}
+
+
+.topic-content .correct .el-radio__label{
+    color: #02c39a !important;
+}
+
+
+.testPaper .forbid_copy {
+    -moz-user-select: none;
+    /*火狐*/
+    -webkit-user-select: none;
+    /*webkit浏览器*/
+    -ms-user-select: none;
+    /*IE10*/
+    -khtml-user-select: none;
+    /*早期浏览器*/
+    user-select: none;
+}

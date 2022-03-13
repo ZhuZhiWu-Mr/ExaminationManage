@@ -13,6 +13,7 @@ class Subject(models.Model):
     subject_class = models.CharField("科目", max_length=64, default="")
     subject_unswer = models.CharField("答案", max_length=4096)
     score = models.CharField("分数", max_length=64)
+    type = models.IntegerField("1：问答题 2：选择题 3：填空题 4：判断题", default=1, blank=False)
 
 
 # 试卷分类表

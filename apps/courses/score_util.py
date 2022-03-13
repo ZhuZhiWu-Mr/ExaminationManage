@@ -180,3 +180,7 @@ def auto_score(user_answer, answer) -> float:
     similarity_score = round(similarity_list[0], 2)
     # similarity_score = str(similarity_score)
     return similarity_score
+
+if __name__ == '__main__':
+    score = auto_score("你好", "你好")
+    print(score)

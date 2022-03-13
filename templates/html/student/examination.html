@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>学生考试页面</title>
+
+    <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
+    <!-- 引入element样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入element组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <link rel="stylesheet/less" href="../../css/testPaper.less">
+    <script type="text/javascript" src='../../js/less.js '></script>
+
+
+</head>
+
+<body>
+<div id="app">
+    8
+    <div class="testPaper">
+        <div class="w">
+            <!-- 考试信息 -->
+            <div class="title">
+                <!-- {{testData}} -->
+                <h3 class="testName">测试名</h3>
+                <ul>
+                    <li class="test-info">试卷Id:</li>
+                    <li class="test-info">出卷者:</li>
+                    <li class="test-info">答题时间: 分钟</li>
+                    <li class="test-info">截至时间:</li>
+                    <li class="test-info">题目数量: 共 道</li>
+                    <li class="test-info">总分:分</li>
+                </ul>
+
+                <ul>
+                    <li class="user-info">所属班级:</li>
+                    <li class="user-info">答题人:</li>
+                    <li class="user-info" v-if="finishTest && testData.examClasses.publishScore == 1">得分:
+                        {{ testData.userGrade.grade + '分' }}</li>
+                    <li class="user-info" v-else>剩余时间: {{ remainTime }}</li>
+
+                    <li class="fr">
+                        <el-button type="primary" size="mini" @click="submitTestpaper" :disabled="isRead">提交试卷
+                        </el-button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="title fixed" v-if="isFixed">
+                <ul>
+                    <li class="test-info"><strong class="testName">{{ testData.examName }}</strong></li>
+                    <li class="test-info">答题时间: {{ testData.time }} 分钟</li>
+                    <li class="test-info">截至时间: {{ testData.examClasses.deadline }}</li>
+                    <li class="test-info" v-if="finishTest && testData.examClasses.publishScore == 1">得分:
+                        {{ testData.userGrade.grade + '分' }}</li>
+                    <li class="test-info" v-else>剩余时间: {{ remainTime }}</li>
+                    <!-- {{expendTime}} -->
+                    <li class="fr">
+                        <el-button type="primary" size="mini" @click="submitTestpaper" :disabled="isRead">提交试卷
+                        </el-button>
+                    </li>
+                </ul>
+            </div>
+            <div class="test-content" :class="testData.examClasses.publishAnswer == 1 ? 'publishScore':''">
+                <!-- 题目内容 -->
+                <div class="topics">
+                    <h4>{{ bigQuestionName_mixin(1)}}</h4><!-- 题目类型名称 -->
+                    <div class="topic" v-for="(topics, index) in sortedTopics" :key="index">
+
+                        <div class="topicsType">
+
+                            <div class="topic-content" v-for="(t, index) in topics.topic_content" :key="index">
+                                <div class="_location"></div>
+                                <!-- 题目 -->
+                                <div class="question" :class="forbid_copy? 'forbid_copy':''">
+                                    <span class="question_nunber">{{ t.index }}、</span>
+                                    {{ t.question }}
+                                    <span class="score">({{ t.score }}分)</span>
+                                </div>
+
+                                <!-- 单选题 -->
+                                <div class="radio" v-if="t.topicType==0">
+                                    <!-- :class="item == t.correctAnswer? 'correct':'error'"  -->
+                                    <el-radio v-for="(item, index) in t.choice" v-model="t.userAnswer"
+                                              :key="index"
+                                              :label="item"
+                                              :disabled="isRead">
+                                        {{ String.fromCharCode(65+index)}}、{{ item }}
+                                    </el-radio>
+                                </div>
+
+                                <!-- 多选题 -->
+                                <div class="checkbox" v-if="t.topicType == 1">
+                                    <el-checkbox-group v-model="t.userAnswer">
+                                        <el-checkbox :label="item" v-for="(item, index) in t.choice" :key="index"
+                                                     :disabled="isRead">
+                                            {{ String.fromCharCode(65+index)}}、{{ item }}
+                                        </el-checkbox>
+                                    </el-checkbox-group>
+                                </div>
+
+                                <!-- 判断题 -->
+                                <div class="TrueOrFalse" v-if="t.topicType == 2">
+                                    <el-radio v-model="t.userAnswer" label="true" :disabled="isRead"
+                                              :class="'true' == t.correctAnswer? 'correct':'error'">正确
+                                    </el-radio>
+                                    <el-radio v-model="t.userAnswer" label="false" :disabled="isRead"
+                                              :class="'false' == t.correctAnswer? 'correct':'error'">错误
+                                    </el-radio>
+                                </div>
+
+                                <!-- 填空题 -->
+                                <div class="fillInBlank" v-if="t.topicType == 3">
+                                    <div v-for="(q, index) in fillSymbolStr(t.question)" :key="index">
+                                        <el-input type="textarea" autosize
+                                                  :disabled="isRead"
+                                                  v-if="index!=fillSymbolStr(t.question).length-1"
+                                                  v-model="t.userAnswer[index]">
+                                        </el-input>
+                                    </div>
+                                </div>
+
+                                <!-- 简答题 -->
+                                <div class="text" v-if="t.topicType == 4">
+                                    <el-input type="textarea" v-model="t.userAnswer"
+                                              :autosize="{ minRows: 3, maxRows: 10 }"
+                                              :disabled="isRead">
+                                    </el-input>
+                                    <!-- {{ t.userAnswer }} -->
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 题目导航 -->
+                <div class="topic-nav " :class="isFixed?'isFixed':''" :style="topic_nav_style">
+                    <div class="topic-nav-describe" v-if="finishTest && testData.examClasses.publishAnswer == 1">
+                        <span class="topic-nav-but correct"> </span> 正确
+                        <span class="space"></span>
+                        <span class="topic-nav-but error"> </span> 错误
+                    </div>
+                    <div class="topic-nav-describe" v-else>
+                        <span class="topic-nav-but hasAnswer"> </span> 已答
+                        <span class="space"></span>
+                        <span class="topic-nav-but "> </span> 未答
+                    </div>
+                    <div v-for="(topics, Topics_index) in sortedTopics" :key="Topics_index">
+                        <div class="topic-nav-item">
+                            <span
+                                    class="topic-nav-button"
+                                    @click="topicNav(topics.topicType,index)"
+                                    v-for="(item , index) in topics.topic_content"
+                                    :key="index"
+                                    :class="emptyAnswer(item)">
+                                {{ topicNavIndex_mixin(topics.topicType,index)}}
+                    </span>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="back-top" @click="backTop_mixin()">
+                <i class="el-icon-arrow-up"></i>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                testName: 'testName',
+                userName: "test",
+                //按题目类型分类好的题目数据
+                //题目类型==>  0:单选题  1:多选题  2:判断题  3:填空题  4:简答题
+                sortedTopics: [
+                    {
+                        topicType: 0,
+                        topic_content: [{
+                            "index": 1,
+                            "question": "题目1",
+                            "score": 24,
+                            "choice": ["111223", "4213", "3214"],
+                            "topicType": 0,
+                            "userAnswer": ""
+                        },
+                            {
+                                "index": 2,
+                                "question": "题目2",
+                                "score": 24,
+                                "choice": ["111223", "4213", "3214"],
+                                "topicType": 0,
+                                "userAnswer": ""
+                            }, {
+                                "index": 3,
+                                "question": "题目3",
+                                "score": 24,
+                                "choice": ["111223", "4213", "3214"],
+                                "topicType": 0,
+                                "userAnswer": ""
+                            }]
+                    },
+
+                    {
+                        topicType: 1, topic_content: [{
+                            "index": 1,
+                            "question": "多选1",
+                            "score": 24,
+                            "choice": ["111223", "4213", "3214"],
+                            "topicType": 1,
+                            "userAnswer": []
+                        }]
+                    },
+                    {
+                        topicType: 2, topic_content: [{
+                            "index": 1,
+                            "question": "多选1",
+                            "score": 24,
+                            "choice": ["111223", "4213", "3214"],
+                            "topicType": 2,
+                            "userAnswer": ''
+                        }]
+                    },
+                    {topicType: 3, topic_content: []},
+                    {topicType: 4, topic_content: []},
+                ],
+                //试卷数据
+                testData: {
+                    examClasses: {},
+                    userGrade: {}
+                },
+                examClassesData: {},
+
+                remainTime: "00:00:00", //考试剩余时间
+                expendTime: 0, //考试用时(秒)
+                isRead: false, //是否为只读模式
+                forbid_copy: false, //是否禁止复制文本
+                switchPage: 0,
+
+                isPublishAnswer: false, //是否公布答案
+                finishTest: false, //是否完成试卷
+                //侧导航栏是否悬浮
+                isFixed: false,
+                topic_nav_style: "top:0px",
+            };
+        },
+        computed: {
+            //按填空符(三个下划线)划分字符串
+            fillSymbolStr() {
+                return function (str) {
+                    var q = str.split("___");
+                    return q;
+                };
+            },
+        },
+        mounted() {
+            alert(this.getQueryVariable("testPaperId"));
+            window.addEventListener("scroll", this.handleScroll);
+            window.addEventListener("visibilitychange", this.visibilitychange);
+            this.showFullScreen();
+        },
+        created() {
+            this.showFullScreen()
+        },
+        methods: {
+            //提交试卷
+            submitTestpaper() {
+                var topic = [];
+                console.log(this.testData.topicTchDTOList);
+                for (let i = 0; i < this.testData.topicTchDTOList.length; i++) {
+                    var item = JSON.parse(JSON.stringify(this.testData.topicTchDTOList[i]))
+                    //处理多选/填空答案
+                    if (item.topicType == 1 || item.topicType == 3) {
+                        if (item.userAnswer instanceof Array) {
+                            var userAnswer = "";
+                            item.userAnswer.forEach((c) => {
+                                userAnswer += c + "\n";
+                            });
+                            item.userAnswer = userAnswer.slice(0, -1);
+                        }
+                    }
+                    topic.push({
+                        topicId: item.topicId,
+                        userAnswer: item.userAnswer,
+                    });
+                }
+
+                console.log(topic);
+
+                var request = {
+                    classesName: this.testData.examClasses.classesName,
+                    examName: this.testData.examName,
+                    userName: this.$store.state.userName,
+                    answerTime: this.expendTime,
+                    userTopicList: topic,
+                };
+                console.log(request);
+                this.$http.post('/submitTestPaper', request).then(res => {
+                    if (res.code == 200) {
+                        this.$message.success(res.msg);
+                        location.reload()
+                    }
+                })
+            },
+
+            //滚动事件
+            handleScroll() {
+                let scrollTop =
+                    window.pageYOffset ||
+                    document.documentElement.scrollTop ||
+                    document.body.scrollTop; // 滚动条偏移量
+                if (scrollTop > 154) {
+                    this.topic_nav_style = "top:" + (scrollTop + 62) + "px";
+                    this.isFixed = true;
+                } else {
+                    this.isFixed = false;
+                }
+            },
+
+            // visibilitychange(){
+            //   if(this.testData.switchPage === -1){
+            //     return
+            //   }
+            //   if (document.visibilityState == "visible") {
+            //     console.log('页面回来了',this.switchPage);
+            //   }
+            //   if (document.visibilityState == "hidden") {
+            //     this.switchPage += 1;
+
+            //     if(this.switchPage >= this.testData.switchPage){
+            //       console.log('提交试卷');
+            //       this.submitTestpaper();
+            //     }else{
+            //       this.$msgbox({
+            //         title: '警告',
+            //         type: 'warning',
+            //         message: '页面已被切换，如果次数为0将会自动提交试卷！ 剩余可以切换次数：' + (this.testData.switchPage-this.switchPage),
+            //         confirmButtonText: '确定',
+            //       });
+            //     }
+            //   }
+            // },
+            getQueryVariable(variable) {
+                const query = window.location.search.substring(1);
+                const vars = query.split("&");
+                for (let i=0; i<vars.length; i++) {
+                   const pair = vars[i].split("=");
+                   if(pair[0] == variable){
+                       return pair[1];
+                   }
+                }
+            },
+            //点击题号定位到题目位置
+            topicNav(type, index) {
+                var i = this.topicNavIndex_mixin(type, index);
+                console.log(i);
+                document.getElementsByClassName("_location")[i - 1].scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            },
+            showFullScreen() {
+                // 全屏
+                lastFullScreenFlag = true;//如果不需要实现防作弊功能，请注释此行
+                if (!document.fullscreenElement && !document.mozFullScreenElement
+                    && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.msRequestFullscreen) {
+                        document.documentElement.msRequestFullscreen();
+                    } else if (document.documentElement.mozRequestFullScreen) {
+                        document.documentElement.mozRequestFullScreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) {
+                        document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                    }
+                }
+            },
+            //题目导航按钮颜色
+            emptyAnswer(val) {
+                //已完成试卷 与 是否公布答案
+                if (this.finishTest === true && this.testData.examClasses.publishAnswer == 1) {
+                    if (val.userScore == val.score) {
+                        console.log(val);
+                        return "correct";
+                    } else {
+                        return "error";
+                    }
+
+                    //未完成试卷
+                } else {
+                    //多选题
+                    // if (val.topicType == 1) {
+                    //   if (val.userAnswer.join("") == "") {
+                    //     return "";
+                    //   }
+                    // }
+
+                    //填空题
+                    if (val.topicType == 3) {
+
+                        let q = val.question.split("___")
+                        if (q.length - 1 != val.userAnswer.length) {
+                            return ""
+                        }
+
+                        for (let item of val.userAnswer) {
+                            if (item == "") {
+                                return ""
+                            }
+                        }
+                    }
+
+                    //单选/判断/简答
+                    if (val.userAnswer.length == 0) {
+                        return "";
+                    }
+
+                    return 'hasAnswer';
+                }
+            },
+            topicTypeName_mixin(type) {
+                switch (type) {
+                    case 0:
+                        return '单选题';
+                    case 1:
+                        return '多选题';
+                    case 2:
+                        return '判断题';
+                    case 3:
+                        return '填空题';
+                    case 4:
+                        return '简答题';
+                }
+            },
+
+            //答题类型名称
+            bigQuestionName_mixin(type) {
+                switch (type) {
+                    case 0:
+                        return '一、单项选择题';
+                    case 1:
+                        return '二、多项选择题';
+                    case 2:
+                        return '三、判断题';
+                    case 3:
+                        return '四、填空题';
+                    case 4:
+                        return '六、简答题';
+                }
+
+
+            },
+
+            //回到顶部
+            backTop_mixin() {
+                document.body.scrollTop = document.documentElement.scrollTop = 0;
+            },
+
+
+            //计算題号
+            topicNavIndex_mixin(Topics_index, index) {
+                var navIndex = 0;
+                for (let i = 0; i < Topics_index; i++) {
+                    navIndex = navIndex + this.sortedTopics[i].topic_content.length;
+                }
+                return navIndex + index + 1;
+            }
+        }
+    })
+</script>
+</body>
+</html>
