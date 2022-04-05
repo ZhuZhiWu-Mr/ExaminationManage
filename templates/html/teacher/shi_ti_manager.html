@@ -146,14 +146,20 @@
 						}, {
 							field: 'subject_name',
 							title: '题目',
-							edit: 'text',
+							// edit: 'text',
 							sort: true,
 							align: 'center',
 							templet: '<div>{{d.fields.subject_name}}</div>'
+						},{
+							field: 'type',
+							title: '题目',
+							sort: true,
+							align: 'center',
+							templet: '<div>{{# if (d.fields.type == 0) { }}单选题{{# } else if(d.fields.type == 1) { }}多选题{{# } else if(d.fields.type == 2) { }}判断题{{# } }} </div>'
 						}, {
 							field: 'subject_unswer',
 							title: '答案',
-							edit: 'text',
+							// edit: 'text',
 							sort: true,
 							align: 'center',
 							templet: '<div>{{d.fields.subject_unswer}}</div>'

@@ -5,6 +5,9 @@ __pycache__/
 migrations/*
 # C extensions
 *.so
+# 上传的视频文件
+upload/
+
 
 # Distribution / packaging
 .Python

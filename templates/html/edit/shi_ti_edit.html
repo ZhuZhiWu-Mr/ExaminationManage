@@ -43,6 +43,19 @@
 		</div>
 
 		<div class="layui-form-item">
+			<label class="layui-form-label">题目类型</label>
+			<div class="layui-input-block">
+			  <select name="subject_type">
+				<option value="0" selected="">单选题</option>
+				<option value="1">多选题</option>
+				<option value="2">判断题</option>
+        		<!-- 3:填空题
+        		4:简答题 -->
+			  </select>
+			</div>
+		</div>
+		  
+		<div class="layui-form-item">
 			<label class="layui-form-label">题目</label>
 
 			<div class="layui-input-block">
@@ -58,15 +71,7 @@
 					id="subject_unswer"></textarea>
 			</div>
 		</div>
-		<!-- <div class="layui-form-item">
-			<div class="layui-inline">
-				<label class="layui-form-label">执行日期</label>
-				<div class="layui-input-inline">
-					<input type="date" name="executionTime" id="date" lay-verify="date" placeholder="yyyy-MM-dd"
-						autocomplete="off" class="layui-input">
-				</div>
-			</div>
-		</div> -->
+
 		<div class="layui-form-item">
 			<div class="layui-input-block">
 				<button type="submit" onclick="return false;" class="layui-btn" lay-submit=""
@@ -75,8 +80,8 @@
 			</div>
 		</div>
 	</form>
-	<script src="../../layui-v2.5.7/layui/layui.js"></script>
 	<script src="../../config.js"></script>
+	<script src="../../js/utils.js"></script>
 	<!-- 注意：如果你直接复制所有代码到本地，上述js路径需要改成你本地的 -->
 	<script>
 		layui.use(['form', 'layedit', 'laydate', 'layer'], function () {
@@ -144,21 +149,12 @@
 			//监听提交
 			form.on('submit(demo1)', function (data) {
 				layedit.sync("textarea");
-				console.log()
 				layedit.sync("subject_unswer");
-				$.post(getHost() + "/courses/subjects", {
-					addData: JSON.stringify(data.field)
-				},
-					function (data, status) {
-						if (data.code == 0) {
-							layer.msg("添加成功，关闭窗口，即可刷新数据");
-							return;
-						}
-					}).error(function () {
-						layer.msg("请检查网络后重试");
-					});
+				data = JSON.stringify(data.field)
+				result = myRequest("/courses/subjects", "POST", data)
+				console.log("result=:" + result)
 				// 重置表单
-				$("form")[0].reset();
+				// $("form")[0].reset();
 			});
 
 			//表单赋值

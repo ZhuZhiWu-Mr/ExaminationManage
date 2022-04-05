@@ -45,6 +45,9 @@ urlpatterns = {
     # 开始考试，获取试卷的题目
     url("^stu_start_test/(?P<pk>\d+)$", views.StartSubjects.as_view()),
 
+    # 提交试卷 【PUT】
+    url("^commit_test_paper", views.StartSubjects.as_view()),
+
     # 批量修改学生答案
     url("^put_batch_student_subject$", views.PutBatchStudentSubject.as_view()),
 

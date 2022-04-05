@@ -1,6 +1,5 @@
 import json
-
-from django.shortcuts import render
+import logging
 from django.views import View
 from django.http import JsonResponse
 from . import login_utils
@@ -17,17 +16,23 @@ class SingIn(View):
         passwd = request.POST.get("passwd")
         # 判断用户名和账号
         user_info = UserProfile.objects.filter(user_name=user_name, passwd=passwd).first()
-        if user_info == None:
+        if not user_info:
             result["msg"] = "账号或密码错误"
             result["code"] = err_code.SELECT_ERROR
             return JsonResponse(result)
-        print(user_info.nick_name)
-        print(user_info.user_type)
-
-        result_tmp = {}
-        result_tmp["token"] = login_utils.create_token(user_name)
-        result_tmp["nick_name"] = user_info.nick_name
-        result_tmp["user_type"] = user_info.user_type
+        token = ""
+        try:
+            token = login_utils.create_token(user_name)
+        except Exception as ce:
+            logging.exception(f"我的异常：{ce}")
+            result["msg"] = "服务器异常"
+            result["code"] = err_code.SELECT_ERROR
+            return JsonResponse(result)
+        result_tmp = {
+            "token": token,
+            "nick_name": user_info.nick_name,
+            "user_type": user_info.user_type
+        }
         result["data"] = result_tmp
         return JsonResponse(result)
 

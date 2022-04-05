@@ -12,8 +12,8 @@ class Subject(models.Model):
     subject_name = models.CharField("题目", max_length=4096)
     subject_class = models.CharField("科目", max_length=64, default="")
     subject_unswer = models.CharField("答案", max_length=4096)
-    score = models.CharField("分数", max_length=64)
-    type = models.IntegerField("1：问答题 2：选择题 3：填空题 4：判断题", default=1, blank=False)
+    score = models.FloatField("分数")
+    type = models.IntegerField("0:单选题  1:多选题  2:判断题  3:填空题  4:简答题", default=0, blank=False)
 
 
 # 试卷分类表
@@ -44,3 +44,16 @@ class StudentSubject(models.Model):
     auto_score = models.FloatField("自动评分", default=-1)
     is_auto_score = models.IntegerField("自动评分是否确认（0否， 1是）", default=-1)
     is_teacher_score = models.IntegerField("老师是否评分（0否， 1是）", default=-1)
+
+
+class StudentRecordingScreen(models.Model):
+    """
+    存放录屏
+    """
+    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
+    translate_class = models.ForeignKey(TranslateClass, on_delete=models.CASCADE, null=True, blank=True)
+    file_name = models.CharField("学习录屏文件名", max_length=32, null=False)
+
+
+
+

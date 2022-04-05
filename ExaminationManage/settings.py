@@ -173,7 +173,8 @@ CORS_ALLOW_HEADERS = (
     'x-requested-with',
 )
 
-
-
 CORS_ORIGIN_ALLOW_ALL = True
 ALLOWED_HOSTS = ['*']
+
+# 上传录屏路径
+UPLOAD_PATH = 'upload'
