@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from . import views
 
-urlpatterns = {
+urlpatterns = [
     # url(r'^subjects/(?P<pk>\d+)/$', views.Subjects),
     url(r'^subjects$', views.Subjects.as_view()),
     url(r'^del_subjects/(?P<pk>\d+)$', views.DelSubjects.as_view()),
@@ -56,4 +56,4 @@ urlpatterns = {
 
     # 自动评分接口
     url("^auto_score_subject$", views.AutoScoreSubject.as_view())
-}
+]

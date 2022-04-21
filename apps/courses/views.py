@@ -91,12 +91,15 @@ class Subjects(View):
         subject_name = body.get('subject_name', '')
         subject_answer = body.get('subject_unswer', '')
         score = body.get('score', '-1')
+        subject_name = subject_name.split('\n')
+        subject_answer = subject_answer.split('\n')
+
+        for i, name in enumerate(subject_name):
+            subject_name[i] = name.strip()
+        for i, answer in enumerate(subject_answer):
+            subject_answer[i] = answer.strip()
         print(f'subject_names:{subject_name}')
         print(f'subject_answer:{subject_answer} type: {type(subject_answer)}')
-        if '<p>' in subject_name:
-            subject_name = subject_name.replace('<p>', '').split('</p>')[0:-1]
-        if '<p>' in subject_answer:
-            subject_answer = subject_answer.replace('<p>', '').split('</p>')[0:-1]
 
         if subject_type == "0":
             # 处理单选题
@@ -106,7 +109,7 @@ class Subjects(View):
                 result["msg"] = "单选题目格式错误"
                 print(result["msg"])
                 return JsonResponse(result)
-            if subject_answer not in subject_name[1:]:
+            if subject_answer[0] not in subject_name[1:]:
                 result["code"] = err_code.ADD_ERROR
                 result["msg"] = "（单选题）用户答案不在题目选项中"
                 print(result["msg"])
@@ -143,11 +146,12 @@ class Subjects(View):
                 print(result["msg"])
                 return JsonResponse(result)
 
-            if subject_answer not in ['0', '1']:
+            if subject_answer[0] not in ['0', '1']:
                 result["code"] = err_code.ADD_ERROR
                 result["msg"] = "判断题答案只能是0或1（1:错误，0正确）"
                 print(result["msg"])
                 return JsonResponse(result)
+            subject_name, *_ = subject_name
         else:
             result["msg"] = "暂时不支持该题目类型"
             result["code"] = err_code.ADD_ERROR
@@ -605,7 +609,7 @@ class StartSubjects(View):
             {topicType: 4, topic_content: []},
         ]
         """
-        result = {"code": err_code.SUCCESS, "msg": "", "data": []}
+        result = {"code": err_code.SUCCESS, "msg": "题目获取完成", "data": []}
         user_id = user_profile.id
         # 是否在考试时间内
 
@@ -652,7 +656,7 @@ class StartSubjects(View):
             test_paper_name = re_subject['test_paper_name']
             if re_subject['subject_type'] == 0:
                 # 单选题
-                print(f"re_subject['subject_answer']:{re_subject['subject_answer']}")
+
                 single_choice.append({
                     "pk": re_subject['id'],
                     "index": single_choice[-1]['index'] + 1 if single_choice else 1,
@@ -671,10 +675,12 @@ class StartSubjects(View):
                     "score": re_subject['score'],
                     "choice": choices,
                     "topicType": 1,
-                    "userAnswer": re_subject['subject_answer'].split(SPLIT_CHAR)
+                    "userAnswer": re_subject['subject_answer'].split(SPLIT_CHAR) if re_subject['subject_answer'] else []
                 })
             elif re_subject['subject_type'] == 2:
                 # 判断题
+                print(f"re_subject['subject_answer']:{re_subject['subject_answer']}")
+                print(f"question:{question}")
                 judgment.append({
                     "pk": re_subject['id'],
                     "index": judgment[-1]['index'] + 1 if judgment else 1,

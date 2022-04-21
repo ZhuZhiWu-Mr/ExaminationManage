@@ -59,7 +59,7 @@
 			<label class="layui-form-label">题目</label>
 
 			<div class="layui-input-block">
-				<textarea name="subject_name" lay-verify="test|required" placeholder="请输入你的题目" id="textarea"></textarea>
+				<textarea rows="10"cols="100" name="subject_name" lay-verify="test|required" placeholder="请输入你的题目" id="textarea"></textarea>
 			</div>
 		</div>
 
@@ -67,7 +67,7 @@
 			<label class="layui-form-label">答案</label>
 
 			<div class="layui-input-block">
-				<textarea name="subject_unswer" lay-verify="test|required" placeholder="请输入你的答案"
+				<textarea rows="10"cols="100" name="subject_unswer" lay-verify="test|required" placeholder="请输入你的答案"
 					id="subject_unswer"></textarea>
 			</div>
 		</div>
@@ -89,54 +89,7 @@
 				layer = layui.layer,
 				layedit = layui.layedit,
 				laydate = layui.laydate;
-			var textArea = layedit.build('textarea', {
-				tool: [
-					'strong' //加粗
-					, 'italic' //斜体
-					, 'underline' //下划线
-					, 'del' //删除线
-					, '|' //分割线
-					, 'left' //左对齐
-					, 'center' //居中对齐
-					, 'right' //右对齐
-					, 'link' //超链接
-					, 'unlink' //清除链接
-					, 'face' //表情
-					, 'help' //帮助
-				]
-			}); //建立编辑器
-			var texareatAnswer = layedit.build('subject_unswer', {
-				tool: [
-					'strong' //加粗
-					, 'italic' //斜体
-					, 'underline' //下划线
-					, 'del' //删除线
-					, '|' //分割线
-					, 'left' //左对齐
-					, 'center' //居中对齐
-					, 'right' //右对齐
-					, 'link' //超链接
-					, 'unlink' //清除链接
-					, 'face' //表情
-					, 'help' //帮助
-				]
-			}); //建立编辑器
 
-			//日期
-			// laydate.render({
-			// 	elem: '#date'
-			// });
-			// laydate.render({
-			// 	elem: '#date1'
-			// });
-
-			//自定义验证规则
-			form.verify({
-				test: function (value) {
-					layedit.sync(textArea)
-					return layedit.sync(texareatAnswer)
-				}
-			});
 
 			//监听指定开关
 			form.on('switch(switchTest)', function (data) {

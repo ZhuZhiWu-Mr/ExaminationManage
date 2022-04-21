@@ -151,9 +151,11 @@
     </div>
 </div>
 <script src="../../js/utils.js"></script>
+<script src="../../lib/layui/layui.js" charset="utf-8"></script>
 <script>
-    // var jquery = $;
-    new Vue({
+    layui.use(['layer'], function () {
+        var layer = layui.layer
+        new Vue({
         el: '#app',
         data() {
             return {
@@ -496,6 +498,7 @@
                 videoPreview.srcObject = this.mediaStream
             }
         }
+    })
     })
 </script>
 </body>
