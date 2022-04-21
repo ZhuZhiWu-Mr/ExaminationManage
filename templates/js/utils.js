@@ -35,13 +35,13 @@ function getCookie(cname) {
   return "";
 }
 
-function myRequest(url, type, data, callback) {
+function myRequest(url, type, data, callback, async=true) {
   $.ajax({
     url: 'http://localhost:8000' + url,
     type: type,
     dataType: 'json',
     data: data,
-    async: false,
+    async: async,
     headers: {
       'Authorization': getCookie("token")
     },
@@ -51,12 +51,13 @@ function myRequest(url, type, data, callback) {
         layer.msg(result.msg)
       } catch(e) {
         console.log('layer is not defined')
+        alert(result.msg)
       }
       if (result.code == 0) {
         callback(result)
       } else if (result.code == 401) {
         window.location.href = "../login/login.html";
-      } 
+      }
     },
     error: function (xhr, errorType, error) {
       alert('网络错误');

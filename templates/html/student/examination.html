@@ -133,10 +133,11 @@
                     </div>
                     <!-- 摄像头 -->
                     <video autoplay id='cameraVideo' style="width: 300px;height: 300px;border: 1px solid #ccc;"></video>
-                    <button id="start-button" @click="startRecord()">开始录制</button>
+                    <!-- 录屏 -->
+                    <!-- <button id="start-button" @click="startRecord()">开始录制</button>
                     <button id="stop-button" @click="stopRecord()">停止录制</button>
                     <button id="download-button" @click="download()">下载视频</button>
-                    <video id="preview" style="width: 200px;height: 200px;background-color: #000;" autoplay></video>
+                    <video id="preview" style="width: 200px;height: 200px;background-color: #000;" autoplay></video> -->
 
                 </div>
 
@@ -173,7 +174,7 @@
                 remainTime: "01:00:00", //考试剩余时间
                 expendTime: 0, //考试用时(秒)
                 isRead: false, //是否为只读模式
-                forbid_copy: false, //是否禁止复制文本
+                forbid_copy: true, //是否禁止复制文本
                 switchPage: 0,
 
                 isPublishAnswer: false, //是否公布答案
@@ -200,13 +201,21 @@
         },
         mounted() {
             var _this = this
-            myRequest('/courses/stu_start_test/' + this.getQueryVariable("testPaperId"), 'GET', {},function(rs){
-                _this.sortedTopics = rs.data.allSubject;
-                _this.testPaperName = rs.data.testPaperName;
-            })
-            this.openCamera();
-            window.addEventListener("scroll", this.handleScroll);
-            window.addEventListener("visibilitychange", this.visibilitychange);
+            myRequest('/courses/stu_start_test/' + this.getQueryVariable("testPaperId"), 'GET', {}, function(rs){
+                console.log("rs", rs)
+                if (rs.code == 0) {
+                    _this.sortedTopics = rs.data.allSubject;
+                    _this.testPaperName = rs.data.testPaperName;
+                    _this.openCamera();
+                    _this.startRecord();
+                    window.addEventListener("scroll", this.handleScroll);
+                    window.addEventListener("visibilitychange", this.visibilitychange);
+                } else {
+                    alert(rs.msg)
+                }
+                
+            });
+            
         },
         created() {
         },
@@ -243,13 +252,15 @@
                         "topic_content" :  topic
                     })
                 }
-                console.log(newSortedTopics)
-                
-
+                // 提交试卷
                 myRequest("/courses/commit_test_paper", "PUT", {"sortedTopics": JSON.stringify(newSortedTopics)}, function(rs){
                     alert("提交成功")
                 })
-                
+                // 停止录屏
+                this.stopRecord();
+                // 上传视频
+                this.download();
+                this.isRead = true;
             },
             handleScroll() {
                 //滚动事件
@@ -465,12 +476,13 @@
 
                 //获取视频流，这时候会弹出用户选择框，前提用户设备支持
                 this.mediaStream = await navigator.mediaDevices.getDisplayMedia()
+                
                 this.mediaRecord = new MediaRecorder(this.mediaStream,{
                     mimeType: 'video/webm;codecs=vp9',
                     audioBitsPerSecond : 128000, //音频码率
                     videoBitsPerSecond : 250000000, //视频码率
                 })
-                
+                console.log(this.mediaRecord, "====1")
                 this.mediaRecord.ondataavailable = function(e){
                     if (e.data.size > 0){
                         console.info(typeof _this.videoBuffer,"视频数据可用", e)

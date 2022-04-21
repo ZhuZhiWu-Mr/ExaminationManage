@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import time
@@ -500,7 +501,7 @@ class StudentSubjectView(View):
 class StartSubjects(View):
     @check_login
     def post(self, request, user_profile):
-        result = {"code": err_code.SUCCESS, "msg": "交卷成功", "data": []}
+        result = {"code": err_code.SUCCESS, "msg": "视频上传成功", "data": []}
         files = request.FILES.get('file', '')
         test_paper_id = request.POST.get('testPaperId')
         print('test_paper_id:{}'.format(test_paper_id))
@@ -518,7 +519,7 @@ class StartSubjects(View):
         return JsonResponse(result)
 
     @check_login
-    def put(self, request):
+    def put(self, request, user_profile):
         """
         @api {put} /courses/commit_test_paper 提交试卷
         @apiName CommitTestPaper
@@ -545,8 +546,6 @@ class StartSubjects(View):
 
         query_dict = QueryDict(request.body)
         sorted_topics = json.loads(query_dict.get('sortedTopics'))
-        # user_id = user_profile.id
-        print(sorted_topics, type(sorted_topics))
         for topic in sorted_topics:
             if not topic:
                 continue
@@ -558,12 +557,14 @@ class StartSubjects(View):
 
         return JsonResponse(result)
 
-    def get(self, request, pk):
+    @check_login
+    def get(self, request, pk, user_profile):
         """
         url: /courses/stu_start_test/1
         根据试卷id,查看所有学生的题目
         :param request:
         :param pk:
+        :param user_profile:
         :return:
         //题目类型==>  0:单选题  1:多选题  2:判断题  3:填空题  4:简答题
         sortedTopics: [
@@ -605,20 +606,19 @@ class StartSubjects(View):
         ]
         """
         result = {"code": err_code.SUCCESS, "msg": "", "data": []}
-        token = request.META.get("HTTP_AUTHORIZATION", "")
-        if not check_token(token):
-            result = {"code": err_code.START_LOGIN, "msg": "登录失效", "data": ""}
-            return JsonResponse(result)
-        user_name = get_username(token)
-        user_profile = UserProfile.objects.get(user_name=user_name)
         user_id = user_profile.id
+        # 是否在考试时间内
 
         # 试卷下的题目
         translates = Translate.objects.filter(translate_class=pk)
         # 将查到的题目添加到学生题目表里面
         for translate in translates:
-
-            # 如果题目已经存在，
+            now_time = datetime.datetime.now()
+            if now_time < translate.translate_class.start_time or now_time > translate.translate_class.end_time:
+                result['code'] = err_code.ADD_ERROR
+                result['msg'] = u'不在考试时间范围内'
+                return JsonResponse(result)
+            # 如果题目已经存在
             if StudentSubject.objects.filter(
                     userprofile=user_id,
                     translate_class=translate.translate_class,

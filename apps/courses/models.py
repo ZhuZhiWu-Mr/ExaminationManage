@@ -53,6 +53,7 @@ class StudentRecordingScreen(models.Model):
     userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
     translate_class = models.ForeignKey(TranslateClass, on_delete=models.CASCADE, null=True, blank=True)
     file_name = models.CharField("学习录屏文件名", max_length=32, null=False)
+    insert_time = models.DateTimeField("开始时间", default=datetime.now)
 
 
 
