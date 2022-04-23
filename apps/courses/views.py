@@ -1,12 +1,11 @@
 import datetime
 import json
-import os
 import time
 from functools import wraps
 
 from django.http import (
     JsonResponse,
-    QueryDict, HttpResponseServerError
+    QueryDict
 )
 from django.views import View
 from django.core import serializers
@@ -525,7 +524,7 @@ class StartSubjects(View):
     @check_login
     def put(self, request, user_profile):
         """
-        @api {put} /courses/commit_test_paper 提交试卷
+        @api {put} /courses/commit_test_paper 提交试卷和评分
         @apiName CommitTestPaper
         @apiGroup Courses
 
@@ -557,8 +556,12 @@ class StartSubjects(View):
                 pk = content['pk']
                 user_answer = SPLIT_CHAR.join(content['userAnswer'])
                 print(f"user_answer:{user_answer}")
-                StudentSubject.objects.filter(id=pk).update(subject_answer=user_answer)
-
+                student_subject = StudentSubject.objects.filter(id=pk).first()
+                student_subject.subject_answer = user_answer
+                if user_answer == student_subject.subject.subject_unswer:
+                    # 用户答案和题目答案是否相等
+                    student_subject.auto_score = student_subject.subject.score
+                student_subject.save()
         return JsonResponse(result)
 
     @check_login
@@ -612,16 +615,17 @@ class StartSubjects(View):
         result = {"code": err_code.SUCCESS, "msg": "题目获取完成", "data": []}
         user_id = user_profile.id
         # 是否在考试时间内
+        translate_class = TranslateClass.objects.filter(id=pk).first()
+        now_time = datetime.datetime.now()
+        if now_time < translate_class.start_time or now_time > translate_class.end_time:
+            result['code'] = err_code.ADD_ERROR
+            result['msg'] = u'不在考试时间范围内'
+            return JsonResponse(result)
 
         # 试卷下的题目
         translates = Translate.objects.filter(translate_class=pk)
         # 将查到的题目添加到学生题目表里面
         for translate in translates:
-            now_time = datetime.datetime.now()
-            if now_time < translate.translate_class.start_time or now_time > translate.translate_class.end_time:
-                result['code'] = err_code.ADD_ERROR
-                result['msg'] = u'不在考试时间范围内'
-                return JsonResponse(result)
             # 如果题目已经存在
             if StudentSubject.objects.filter(
                     userprofile=user_id,
@@ -656,7 +660,6 @@ class StartSubjects(View):
             test_paper_name = re_subject['test_paper_name']
             if re_subject['subject_type'] == 0:
                 # 单选题
-
                 single_choice.append({
                     "pk": re_subject['id'],
                     "index": single_choice[-1]['index'] + 1 if single_choice else 1,
@@ -664,7 +667,7 @@ class StartSubjects(View):
                     "score": re_subject['score'],
                     "choice": choices,
                     "topicType": 0,
-                    "userAnswer": re_subject['subject_answer'] if re_subject['subject_answer'] else []
+                    "userAnswer": [re_subject['subject_answer']] if re_subject['subject_answer'] else []
                 })
             elif re_subject['subject_type'] == 1:
                 # 多选题
@@ -697,7 +700,8 @@ class StartSubjects(View):
                 {"topicType": 0, "topic_content": single_choice},
                 {"topicType": 1, "topic_content": multiple_choice},
                 {"topicType": 2, "topic_content": judgment}
-            ]
+            ],
+            "endTime": translate_class.end_time.strftime('%Y-%m-%d %H:%M:%S')
         }
         return JsonResponse(result)
 

@@ -25,8 +25,8 @@
                 <!-- {{testData}} -->
                 <h3 class="testName">{{testPaperName}}</h3>
                 <ul>
-                    <li class="test-info">截至时间:</li>
-                    <li class="test-info">剩余时间: {{ remainTime }}</li>
+                    <li class="test-info">截至时间：{{endTime}}</li>
+                    <li class="test-info" style="color: red;">剩余时间: {{ remainTime }}</li>
                     <li class="test-info">
                         <el-button type="primary" size="mini" @click="submitTestPaper" :disabled="isRead">提交试卷
                         </el-button>
@@ -153,13 +153,18 @@
 <script src="../../js/utils.js"></script>
 <script src="../../lib/layui/layui.js" charset="utf-8"></script>
 <script>
-    layui.use(['layer'], function () {
-        var layer = layui.layer
+    layui.use(['util','layer', 'laydate'], function () {
+        var layer = layui.layer,
+            laydate = layui.laydate,
+            util = layui.util
+
         new Vue({
         el: '#app',
         data() {
             return {
                 testPaperName: '',
+                // 考试结束时间
+                endTime: '', 
                 userName: "test",
                 recorder: "",
                 //按题目类型分类好的题目数据
@@ -208,20 +213,45 @@
                 if (rs.code == 0) {
                     _this.sortedTopics = rs.data.allSubject;
                     _this.testPaperName = rs.data.testPaperName;
+                    _this.endTime = rs.data.endTime
                     _this.openCamera();
                     _this.startRecord();
                     window.addEventListener("scroll", this.handleScroll);
                     window.addEventListener("visibilitychange", this.visibilitychange);
-                } else {
-                    alert(rs.msg)
+                    _this.countDown(rs.data.endTime);
                 }
-                
             });
             
         },
         created() {
         },
         methods: {
+            countDown(endTime) {
+                /*
+                倒计时
+                */
+                _this = this
+                var thisTimer, setCountdown = function(y, M, d, H, m, s){
+                    var _endTime = new Date(y, M||0, d||1, H||0, m||0, s||0) //结束日期
+                    ,serverTime = new Date(); //假设为当前服务器时间，这里采用的是本地时间，实际使用一般是取服务端的
+                    
+                    clearTimeout(thisTimer);
+                    util.countdown(_endTime, serverTime, function(date, serverTime, timer){
+                        var str = date[0] + '天' + date[1] + '时' +  date[2] + '分' + date[3] + '秒';
+                        _this.remainTime = str
+                        thisTimer = timer;
+                    });
+                };
+            
+                timeArr = endTime.replace(" ", ":").replace(/\:/g, "-").split("-");
+                var year = timeArr[0];
+                var month = timeArr[1];
+                var date = timeArr[2];
+                var hours = timeArr[3];
+                var minutes = timeArr[4];
+                var seconds = timeArr[5];
+                setCountdown(year, month - 1, date, hours, minutes, seconds);
+            },
             openCamera() {
                 var video = $("#cameraVideo").get(0)
                 var cameraSuccess = function (stream) {
