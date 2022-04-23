@@ -27,7 +27,7 @@
     <table class="layui-hide" id="demo" lay-filter="test"></table>
 
     <script type="text/html" id="barDemo">
-        <button type="button" class="layui-btn layui-btn-xs" lay-event="auto_score_btn">自动评分</button>
+        <button type="button" class="layui-btn layui-btn-xs" lay-event="auto_score_btn">无</button>
     </script>
 
     <script type="text/html" id="auto_score_comfirm">
@@ -107,10 +107,8 @@
                 //执行一个 table 实例
                 table.render({
                     elem: '#demo',
-                    // height: 420,
-                    toolbar: 'true', 
+                    toolbar: 'true',
                     url: getHost() + '/courses/student_subject/' + shijuanpk, //数据接口
-                    // url: 'date_test.json',
                     title: '用户表',
                     // toolbar: 'default', //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
                     // cellMinWidth: 80, //全局定义所有常规单元格最小宽度,
@@ -123,7 +121,6 @@
                             title: '编号',
                             sort: true,
                             type: 'numbers',
-                            width: 100
                         },
                         {
                             field: 'pk',
@@ -137,54 +134,26 @@
                             field: 'stu_number',
                             title: '学号',
                             sort: true,
-                            width: 150,
                             align: 'center',
                         }, {
                             field: 'the_name',
                             title: '姓名',
                             sort: true,
-                            width: 130,
                             align: 'center',
                         }, {
-                            field: 'subject_name',
-                            title: '题目',
-                            sort: true,
-                            width: 130,
-                            align: 'center',
-                        }, {
-                            field: 'subject_answer',
-                            title: '教师答案',
+                            field: 'sum_score',
+                            title: '总分',
                             sort: true,
                             align: 'center',
+                            templet: '#sum_score',
                         }, {
-                            field: 'user_answer',
-                            title: '学生答案',
+                            field: 'recording_url',
+                            title: '视频回放',
                             sort: true,
                             align: 'center',
-                        }, {
-                            field: 'auto_score',
-                            title: '自动评分',
-                            sort: true,
-                            width: 100,
-                            align: 'center',
-                            templet: '#auto_score_comfirm'
-                        }, {
-                            field: 'user_score',
-                            title: '人工评分',
-                            edit: 'text',
-                            sort: true,
-                            align: 'center',
-                            templet: '#ren_gon_feng',
-                            width: 100
-                        }, {
-                            fixed: 'right',
-                            title: '操作',
-                            toolbar: '#barDemo',
-                            align: 'center',
-                            width: 200
+                            templet: '#recording_url',
                         }]
                     ],
-
                     page: true, //开启分页
                 });
             }
@@ -269,17 +238,7 @@
                     layer.msg("确认操作")
                     return false
                 } else if (layEvent === 'auto_score_btn') {
-                    $.post(getHost() + "/courses/auto_score_subject", {
-                        pk: data.pk,
-                        token: token
-                    }, function (data, status) {
-                        layer.msg("自动评分成功：" + data.data.score + "分");
-                        obj.update({
-                            auto_score: data.data.score,
-                        });
-                    }).error(function () {
-                        layer.msg("请检查网络后重试");
-                    });
+                    layer.msg("无功能")
                 } else if (layEvent === 'auto_score_event') {
                     $.post(getHost() + "/courses/put_student_score/" + data.pk, {
                         column: 'is_auto_score',

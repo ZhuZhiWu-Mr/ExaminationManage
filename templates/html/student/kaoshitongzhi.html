@@ -95,10 +95,9 @@
                 // toolbar: '#toolbarDemo',
                 method: 'post',
                 url: getHost() + '/courses/list_stu_translate_class', //数据接口
-                where: {
-                    token: token
+                headers: {
+                    'Authorization': getCookie("token")
                 },
-
                 title: '用户表',
                 // toolbar: 'default', //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
                 cellMinWidth: 80, //全局定义所有常规单元格最小宽度,

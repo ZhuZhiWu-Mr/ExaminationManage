@@ -30,9 +30,7 @@
     <table class="layui-hide" id="demo" lay-filter="test"></table>
 
     <script type="text/html" id="barDemo">
-			<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="show">前去评分</a>
-    <!-- <a class="layui-btn layui-btn-xs" lay-event="show"></a> -->
-    <!-- <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a> -->
+			<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="show">成绩情况</a>
     </script>
 
     <table class="layui-hide" id="demo" lay-filter="test"></table>
@@ -225,9 +223,9 @@
                 var that = this;
                 //多窗口模式，层叠置顶
                 layer.open({
-                    type: 2 //此处以iframe举例
-                    ,
-                    title: class_name + "试卷下包含的题目",
+                    //此处以iframe举例
+                    type: 2,
+                    title: class_name + "试卷的成绩情况",
                     skin: 'layui-layer-rim',
                     area: ['800px', '600px'],
                     shade: 0,
@@ -243,9 +241,7 @@
                     },
                     btn2: function () {
                         layer.closeAll();
-                    }
-
-                    ,
+                    },
                     zIndex: layer.zIndex //重点1
                     ,
                     success: function (layero) {
@@ -260,8 +256,6 @@
                 if (layEvent === 'detail') {
                     // setShiJuanDtails(data.pk, data.class_name);
                 } else if (layEvent === 'show') {
-                    console.log(data)
-
                     setShiJuanDtails(data.pk, data.class_name)
                 } else if (layEvent === 'del') {
                     layer.confirm('真的删除行么', function (index) {

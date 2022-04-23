@@ -9,7 +9,7 @@ from django.http import (
 )
 from django.views import View
 from django.core import serializers
-from django.db.models import F
+from django.db.models import F, Sum
 
 from ExaminationManage.settings import UPLOAD_PATH
 from . import score_util
@@ -18,7 +18,12 @@ from .models import (
     StudentSubject,
     TranslateClass,
     Translate,
-    Classes, StudentRecordingScreen
+    Classes,
+    StudentRecordingScreen,
+    SINGLE_CHOICE,
+    MULTIPLE_CHOICE,
+    JUDGMENT,
+    Judgment
 )
 from ExaminationManage import err_code
 from ..users.models import UserProfile
@@ -86,7 +91,7 @@ class Subjects(View):
         """
         result = {"code": err_code.SUCCESS, "msg": "", "data": ""}
         body = json.loads(str(request.body, 'utf-8'))
-        subject_type = body.get('subject_type', -1)
+        subject_type = int(body.get('subject_type', -1))
         subject_name = body.get('subject_name', '')
         subject_answer = body.get('subject_unswer', '')
         score = body.get('score', '-1')
@@ -100,7 +105,7 @@ class Subjects(View):
         print(f'subject_names:{subject_name}')
         print(f'subject_answer:{subject_answer} type: {type(subject_answer)}')
 
-        if subject_type == "0":
+        if subject_type == SINGLE_CHOICE:
             # 处理单选题
             # ['题目', '选项一', '选项二']
             if len(subject_name) <= 1:
@@ -114,7 +119,7 @@ class Subjects(View):
                 print(result["msg"])
                 return JsonResponse(result)
             subject_name = SPLIT_CHAR.join(subject_name)
-        elif subject_type == "1":
+        elif subject_type == MULTIPLE_CHOICE:
             # 处理多选题
             # ['题目', '选项一', '选项二']
             if len(subject_name) <= 1:
@@ -136,7 +141,7 @@ class Subjects(View):
                 print(result["msg"])
                 return JsonResponse(result)
             subject_name = SPLIT_CHAR.join(subject_name)
-        elif subject_type == "2":
+        elif subject_type == JUDGMENT:
             print(f'=====subject_names 92: {subject_name}')
             print(f'=====subject_answer 93: {subject_answer}')
             if isinstance(subject_name, list) and len(subject_name) >= 2:
@@ -144,8 +149,8 @@ class Subjects(View):
                 result["msg"] = "判断题目不能换行"
                 print(result["msg"])
                 return JsonResponse(result)
-
-            if subject_answer[0] not in ['0', '1']:
+            subject_answer = int(subject_answer[0])
+            if subject_answer not in [Judgment.CORRECT, Judgment.ERROR]:
                 result["code"] = err_code.ADD_ERROR
                 result["msg"] = "判断题答案只能是0或1（1:错误，0正确）"
                 print(result["msg"])
@@ -157,8 +162,8 @@ class Subjects(View):
             return JsonResponse(result)
         print(f'110 subject_name: {subject_name}')
         self.subject_db.subject_name = subject_name
-        self.subject_db.subject_unswer = SPLIT_CHAR.join(subject_answer) if isinstance(subject_answer,
-                                                                                       list) else subject_answer
+        self.subject_db.subject_unswer = SPLIT_CHAR.join(subject_answer) if isinstance(
+            subject_answer, list) else subject_answer
         self.subject_db.score = score
         self.subject_db.type = int(subject_type)
         try:
@@ -476,26 +481,35 @@ class ClassesView(View):
 
 class StudentSubjectView(View):
     def get(self, request, pk):
-        '''
+        """
         根据试卷id,查看所有学生的答题卡
         :param request:
         :param pk:
-        :return:
-        '''
-        result = {"code": err_code.SUCCESS, "msg111": "", "data": []}
-        student_subjects = StudentSubject.objects.filter(translate_class=pk)
+        :return:{
+            code: 0
+            count: 1
+            data: [{
+                stu_number: "Z202014060634",
+                the_name: "朱朱朱",
+                sum_score: 20,
+                // 回话地址
+                recording_url: "16505393374499630.mp4"
+            }]
+            msg: ""
+        }
+        """
+        result = {"code": err_code.SUCCESS, "msg": "", "data": []}
+        student_subjects = StudentSubject.objects.filter(translate_class=pk).values('userprofile').annotate(
+            sum_score=Sum('auto_score'), the_name=F('userprofile__the_name'), stu_number=F('userprofile__stu_number')
+        )
+        record = StudentRecordingScreen.objects.filter(translate_class=pk).first()
         for student_subject in student_subjects:
-            re = {}
-            re["pk"] = student_subject.id
-            re["stu_number"] = student_subject.userprofile.stu_number
-            re["the_name"] = student_subject.userprofile.the_name
-            re["subject_answer"] = student_subject.subject.subject_unswer
-            re["user_answer"] = student_subject.subject_answer
-            re["auto_score"] = student_subject.auto_score
-            re["user_score"] = student_subject.user_score
-            re["is_auto_score"] = student_subject.is_auto_score
-            re["subject_name"] = student_subject.subject.subject_name
-            result["data"].append(re)
+            result["data"].append({
+                "stu_number": student_subject['stu_number'],
+                "the_name": student_subject['the_name'],
+                "sum_score": student_subject['sum_score'],
+                "recording_url": record.file_name if record else ""
+            })
 
         result["count"] = student_subjects.count()
         return JsonResponse(result)
@@ -733,25 +747,20 @@ class PutSubjectsView(View):
 
 
 class ListStuTranslateClass(View):
-    def post(self, request):
+    @check_login
+    def post(self, request, user_profile):
         # 检查登录
         result = {"code": err_code.SUCCESS, "msg": "", "data": ""}
-        token = request.POST.get("token", "")
-        if not check_token(token):
-            result = {"code": err_code.START_LOGIN, "msg": "没有登录", "data": ""}
-            return JsonResponse(result)
-        user_name = get_username(token)
-        user_profile = UserProfile.objects.get(user_name=user_name)
-
         translate_class = TranslateClass.objects.filter(classes_id=user_profile.classes)
 
         re_data = []
         for translate in translate_class:
-            re = {}
-            re["pk"] = translate.id
-            re["class_name"] = translate.class_name
-            re["start_time"] = translate.start_time
-            re["end_time"] = translate.end_time
+            re = {
+                "pk": translate.id,
+                "class_name": translate.class_name,
+                "start_time": translate.start_time,
+                "end_time": translate.end_time
+            }
             re_data.append(re)
         result["data"] = re_data
         return JsonResponse(result)
@@ -771,40 +780,43 @@ class PutBatchStudentSubject(View):
 
 
 class GetStuAnswerSubjectView(View):
-    def post(self, request):
-        '''
+    @check_login
+    def post(self, request, user_profile):
+        """
         根据试卷id,查看所有学生的答题卡
         :param request:
         :param pk:
         :return:
-        '''
+        """
         # 检查登录
-        result = {"code": err_code.SUCCESS, "msg": "", "data": []}
-        token = request.POST.get("token", "")
+        result = {"code": err_code.SUCCESS, "msg": "加载成功", "data": []}
         pk = request.POST.get("pk", "")
-        if not check_token(token):
-            result = {"code": err_code.START_LOGIN, "msg": "登录失效", "data": ""}
-            return JsonResponse(result)
-
-        user_name = get_username(token)
-        user_profile = UserProfile.objects.get(user_name=user_name)
 
         student_subjects = StudentSubject.objects.filter(translate_class=pk, userprofile=user_profile.id)
+        sum_score = 0
         for student_subject in student_subjects:
-            re = {}
-            re["pk"] = student_subject.id
-            re["user_subject_answer"] = student_subject.subject_answer
+            if student_subject.auto_score > 0:
+                sum_score += student_subject.auto_score
 
-            re["auto_score"] = "暂无" if student_subject.auto_score == -1 else student_subject.auto_score
-            re["user_score"] = "暂无" if student_subject.user_score == -1 else student_subject.user_score
-
-            re["is_auto_score"] = student_subject.is_auto_score
-            re["score"] = "暂无" if student_subject.subject.score == -1 else student_subject.subject.score
-            re["subject_answer"] = student_subject.subject.subject_unswer
-            re["subject_name"] = student_subject.subject.subject_name
+            subject_answer = student_subject.subject_answer
+            subject_type = student_subject.subject.type
+            if subject_type == JUDGMENT:
+                subject_answer = "正确" if int(subject_answer) == Judgment.CORRECT else "错误"
+            re = {
+                "pk": student_subject.id,
+                "user_subject_answer": subject_answer,
+                "auto_score": 0 if student_subject.auto_score == -1 else student_subject.auto_score,
+                "user_score": 0 if student_subject.user_score == -1 else student_subject.user_score,
+                "is_auto_score": student_subject.is_auto_score,
+                "score": 0 if student_subject.subject.score == -1 else student_subject.subject.score,
+                "subject_answer": student_subject.subject.subject_unswer,
+                "subject_name": student_subject.subject.subject_name,
+                "subject_type": Subject.get_subject_type(subject_type)
+            }
             result["data"].append(re)
 
         result["count"] = student_subjects.count()
+        result["sum_score"] = sum_score
         return JsonResponse(result)
 
 
