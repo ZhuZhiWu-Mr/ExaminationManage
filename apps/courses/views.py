@@ -57,6 +57,9 @@ def check_login(func):
     return wrapper
 
 
+result = {"code": err_code.SUCCESS, "msg": "", "data": ""}
+
+
 class Subjects(View):
     """
         老师新增试题、查询试题
@@ -76,11 +79,20 @@ class Subjects(View):
         self.subject_db = Subject()
 
     def get(self, request):
-        result = {"code": err_code.SUCCESS, "msg": "", "data": ""}
-        subjects = Subject.objects.filter()
-
-        province = serializers.serialize("json", subjects)
-        result["data"] = json.loads(province)
+        result = {"code": err_code.SUCCESS, "msg": "", "data": []}
+        limit = int(request.GET.get('limit'))
+        page = int(request.GET.get('page'))
+        start_num = (page - 1) * limit
+        end_num = page * limit
+        subjects = Subject.objects.all().order_by('-insert_time')
+        for subject in subjects[start_num:end_num]:
+            result["data"].append({
+                "pk": subject.id,
+                "subject_name": subject.subject_name,
+                "score": subject.score,
+                "type": subject.type,
+                "subject_unswer": subject.subject_unswer
+            })
         result["count"] = subjects.count()
         return JsonResponse(result)
 
@@ -89,103 +101,140 @@ class Subjects(View):
         :param request:
         :return:
         """
-        result = {"code": err_code.SUCCESS, "msg": "", "data": ""}
+        files = request.FILES.get('file', '')
+        if files:
+            # 如果是文件上传
+            *_, file_extension = files.name.split('.')
+            if not file_extension == 'csv':
+                result['msg'] = '仅支持csv文件'
+                result['code'] = err_code.ADD_ERROR
+                return JsonResponse(result)
+            random_file_name = ".".join(
+                 ['subject_', str(int(time.time() * 10000000)), file_extension]
+            )
+            with open('{}/{}'.format(UPLOAD_PATH, random_file_name), "wb") as fs:
+                for item in files.chunks():
+                    fs.write(item)
+            err_num = 0
+            success_num = 0
+            with open('{}/{}'.format(UPLOAD_PATH, random_file_name), "r", encoding='UTF-8') as fsr:
+                # 删除首行
+                fsr.readline()
+                line = fsr.readline()
+                while line:
+                    line = fsr.readline()
+                    lines = line.split(',')
+                    if len(lines) == 4:
+                        subject_name, subject_type, subject_answer, score = lines
+                        subject_name = subject_name.split(SPLIT_CHAR)
+                        subject_answer = subject_answer.split(SPLIT_CHAR)
+                        for i, name in enumerate(subject_name):
+                            subject_name[i] = name.strip()
+                        for i, answer in enumerate(subject_answer):
+                            subject_answer[i] = answer.strip()
+                        msg = self._insert_subject(int(subject_type), subject_name, subject_answer, int(score))
+                        if msg:
+                            print(msg)
+                            err_num += 1
+                        else:
+                            success_num += 1
+                    else:
+                        err_num += 1
+            result['msg'] = f'导入题库成功：{success_num},失败：{err_num}'
+            return JsonResponse(result)
+
         body = json.loads(str(request.body, 'utf-8'))
         subject_type = int(body.get('subject_type', -1))
         subject_name = body.get('subject_name', '')
         subject_answer = body.get('subject_unswer', '')
         score = body.get('score', '-1')
+
         subject_name = subject_name.split('\n')
         subject_answer = subject_answer.split('\n')
-
         for i, name in enumerate(subject_name):
             subject_name[i] = name.strip()
         for i, answer in enumerate(subject_answer):
             subject_answer[i] = answer.strip()
-        print(f'subject_names:{subject_name}')
-        print(f'subject_answer:{subject_answer} type: {type(subject_answer)}')
+        msg = self._insert_subject(subject_type, subject_name, subject_answer, score)
+        result['msg'] = msg if msg else u'添加成功'
+        return JsonResponse(result)
 
+    def _insert_subject(self, subject_type, subject_name, subject_answer, score):
+        """
+        添加题目
+        :param subject_type:  int
+        :param subject_name: list
+        :param subject_answer: list
+        :param score: int
+        :return:
+            ”“：表示成功
+            "提示信息"：对应的失败原因
+        """
+        print(subject_type, subject_name, subject_answer, score)
         if subject_type == SINGLE_CHOICE:
             # 处理单选题
             # ['题目', '选项一', '选项二']
             if len(subject_name) <= 1:
-                result["code"] = err_code.ADD_ERROR
-                result["msg"] = "单选题目格式错误"
-                print(result["msg"])
-                return JsonResponse(result)
+                print("单选题目格式错误")
+                return "单选题目格式错误"
             if subject_answer[0] not in subject_name[1:]:
-                result["code"] = err_code.ADD_ERROR
-                result["msg"] = "（单选题）用户答案不在题目选项中"
-                print(result["msg"])
-                return JsonResponse(result)
+                print("（单选题）用户答案不在题目选项中")
+                return "（单选题）用户答案不在题目选项中"
             subject_name = SPLIT_CHAR.join(subject_name)
         elif subject_type == MULTIPLE_CHOICE:
             # 处理多选题
             # ['题目', '选项一', '选项二']
             if len(subject_name) <= 1:
-                result["code"] = err_code.ADD_ERROR
-                result["msg"] = "多选题目格式错误"
-                print(result["msg"])
-                return JsonResponse(result)
+                print("多选题目格式错误")
+                return "多选题目格式错误"
 
             flag = True
-            print(f'=====subject_names 79: {subject_name}')
-            print(f'=====subject_answer 80: {subject_answer}')
             for answer in subject_answer:
                 if answer not in subject_name[1:]:
                     flag = False
                     break
             if not flag:
-                result["code"] = err_code.ADD_ERROR
-                result["msg"] = "（多选题）用户答案不在题目选项中"
-                print(result["msg"])
-                return JsonResponse(result)
+                print("（多选题）用户答案不在题目选项中")
+                return "（多选题）用户答案不在题目选项中"
             subject_name = SPLIT_CHAR.join(subject_name)
         elif subject_type == JUDGMENT:
-            print(f'=====subject_names 92: {subject_name}')
-            print(f'=====subject_answer 93: {subject_answer}')
             if isinstance(subject_name, list) and len(subject_name) >= 2:
-                result["code"] = err_code.ADD_ERROR
-                result["msg"] = "判断题目不能换行"
-                print(result["msg"])
-                return JsonResponse(result)
+                print("判断题目不能换行")
+                return "判断题目不能换行"
             subject_answer = int(subject_answer[0])
             if subject_answer not in [Judgment.CORRECT, Judgment.ERROR]:
-                result["code"] = err_code.ADD_ERROR
-                result["msg"] = "判断题答案只能是0或1（1:错误，0正确）"
-                print(result["msg"])
-                return JsonResponse(result)
+                print("判断题答案只能是0或1（1:错误，0正确）")
+                return "判断题目不能换行"
             subject_name, *_ = subject_name
         else:
-            result["msg"] = "暂时不支持该题目类型"
-            result["code"] = err_code.ADD_ERROR
-            return JsonResponse(result)
-        print(f'110 subject_name: {subject_name}')
-        self.subject_db.subject_name = subject_name
-        self.subject_db.subject_unswer = SPLIT_CHAR.join(subject_answer) if isinstance(
+            print(f'暂时不支持该题目类型')
+            return "判断题目不能换行"
+        if Subject.objects.filter(subject_name=subject_name):
+            print(f'题库存在题目')
+            return "题库存在题目"
+        subject_db = Subject()
+        subject_db.subject_name = subject_name
+        subject_db.subject_unswer = SPLIT_CHAR.join(subject_answer) if isinstance(
             subject_answer, list) else subject_answer
-        self.subject_db.score = score
-        self.subject_db.type = int(subject_type)
-        try:
-            self.subject_db.save()
-        except Exception as e:
-            result["msg"] = u'添加失败'
-            result["code"] = err_code.ADD_ERROR
-            print(e)
-            return JsonResponse(result)
-        result['msg'] = u'添加成功'
+        subject_db.score = score
+        subject_db.type = int(subject_type)
+        subject_db.save()
+        return ""
 
+    def delete(self, request):
+        """
+        删除题库题目
+        :param request:
+        :param pks: list 题目的所有唯一ID
+        :return:
+        """
+        result = {"code": err_code.SUCCESS, "msg": "删除成功", "data": ""}
+        query_dict = QueryDict(request.body)
+        pks = json.loads(query_dict.get('pks'))
+        for pk in pks:
+            subjects = Subject.objects.get(pk=pk)
+            subjects.delete()
         return JsonResponse(result)
-
-    # def handle_subject(self, subject_name, sub_type):
-    #     """
-    #     处理题目
-    #     :param subject_name: str "<p>发的课件撒结果大家法律的凯撒奖霏霏械</p><p>A.123</p>"
-    #     :param sub_type:
-    #     :return:
-    #     """
-    #     subject_name.
-    #     if sub_type == 0:
 
 
 # 修改
@@ -210,43 +259,17 @@ class PutSubjects(View):
         if column == "subject_unswer":
             subjects.subject_unswer = tar_value
         subjects.save()
-        # Subject().update(column, tarValue, pk)
         return JsonResponse(result)
-
-
-# 删除
-class DelSubjects(View):
-    def post(self, request, pk):
-        result = {"code": err_code.SUCCESS, "msg": "", "data": ""}
-        subjects = None
-        try:
-            subjects = Subject.objects.get(id=pk)
-        except Subject.DoesNotExist:
-            result["code"] = err_code.DELETE_ERROR
-            return JsonResponse(result)
-
-        try:
-            subjects.delete()
-        except:
-            result["msg"] = "删除失败"
-            result["code"] = err_code.ADD_ERROR
-            return JsonResponse(result)
-        return JsonResponse(result)
-
-
-'''
-试卷
-'''
 
 
 class TranslateIdClassView(View):
     def get(self, request, pk):
-        '''
+        """
         试卷id查班级
         :param request:
         :param pk:
         :return:
-        '''
+        """
         result = {"code": err_code.SUCCESS, "msg": "", "data": []}
         # 试卷Id
         translate_class = TranslateClass.objects.filter(id=pk).all()
@@ -480,7 +503,8 @@ class ClassesView(View):
 
 
 class StudentSubjectView(View):
-    def get(self, request, pk):
+    @check_login
+    def get(self, request, pk, user_profile):
         """
         根据试卷id,查看所有学生的答题卡
         :param request:
@@ -502,8 +526,11 @@ class StudentSubjectView(View):
         student_subjects = StudentSubject.objects.filter(translate_class=pk).values('userprofile').annotate(
             sum_score=Sum('auto_score'), the_name=F('userprofile__the_name'), stu_number=F('userprofile__stu_number')
         )
-        record = StudentRecordingScreen.objects.filter(translate_class=pk).first()
+
         for student_subject in student_subjects:
+            record = StudentRecordingScreen.objects.filter(
+                userprofile=student_subject['userprofile'], translate_class=pk
+            ).first()
             result["data"].append({
                 "stu_number": student_subject['stu_number'],
                 "the_name": student_subject['the_name'],
@@ -523,7 +550,9 @@ class StartSubjects(View):
         test_paper_id = request.POST.get('testPaperId')
         print('test_paper_id:{}'.format(test_paper_id))
         *_, file_extension = files.name.split('.')
-        random_file_name = ".".join([str(int(time.time() * 10000000)), file_extension])
+        random_file_name = ".".join(
+            [str(int(time.time() * 10000000)), file_extension]
+        )
         print(random_file_name)
         with open('{}/{}'.format(UPLOAD_PATH, random_file_name), "wb") as fs:
             for item in files.chunks():
@@ -751,6 +780,7 @@ class ListStuTranslateClass(View):
     def post(self, request, user_profile):
         # 检查登录
         result = {"code": err_code.SUCCESS, "msg": "", "data": ""}
+        # 根据用户ID，查看用户下对应的试卷
         translate_class = TranslateClass.objects.filter(classes_id=user_profile.classes)
 
         re_data = []

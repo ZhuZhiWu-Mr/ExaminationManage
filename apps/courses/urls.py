@@ -3,9 +3,7 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    # url(r'^subjects/(?P<pk>\d+)/$', views.Subjects),
     url(r'^subjects$', views.Subjects.as_view()),
-    url(r'^del_subjects/(?P<pk>\d+)$', views.DelSubjects.as_view()),
     url(r'^put_subjects/(?P<pk>\d+)$', views.PutSubjects.as_view()),
 
     # 添加试卷、查询试卷类别

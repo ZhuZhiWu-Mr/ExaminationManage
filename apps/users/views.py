@@ -15,7 +15,9 @@ class SingIn(View):
         user_name = request.POST.get("user_name")
         passwd = request.POST.get("passwd")
         # 判断用户名和账号
-        user_info = UserProfile.objects.filter(user_name=user_name, passwd=passwd).first()
+        user_info = UserProfile.objects.filter(
+            user_name=user_name, passwd=passwd
+        ).first()
         if not user_info:
             result["msg"] = "账号或密码错误"
             result["code"] = err_code.SELECT_ERROR
@@ -50,14 +52,15 @@ class SingUp(View):
         result = {"code": err_code.SUCCESS, "msg": "注册成功", "data": {}}
         user_name = request.POST.get("user_name")
         passwd = request.POST.get("passwd")
-        classes = request.POST.get("clsses")
+        classes = request.POST.get("clsses", '')
         user_type = request.POST.get("user_type", 2)
-        # 老师
+
         if user_type == 2:
+            # 学生需要获取班级参数
             classes = request.POST.get("classes")
-        print(user_name)
-        user_name_count = UserProfile.objects.filter(user_name=user_name).count()
-        print(user_name_count)
+        user_name_count = UserProfile.objects.filter(
+            user_name=user_name
+        ).count()
         if user_name_count > 0:
             result["msg"] = "账号已经存在"
             result["code"] = err_code.ADD_ERROR

@@ -28,6 +28,7 @@ class Subject(models.Model):
     subject_unswer = models.CharField("答案", max_length=4096)
     score = models.FloatField("分数")
     type = models.IntegerField("0:单选题  1:多选题  2:判断题  3:填空题  4:简答题", default=0, blank=False)
+    insert_time = models.DateTimeField("插入时间", default=timezone.now)
 
     @staticmethod
     def get_subject_type(sub_type):

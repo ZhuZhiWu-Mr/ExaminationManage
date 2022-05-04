@@ -112,6 +112,9 @@
                     title: '用户表',
                     // toolbar: 'default', //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
                     // cellMinWidth: 80, //全局定义所有常规单元格最小宽度,
+                    headers: {
+                        'Authorization': getCookie("token")
+                    },
                     parseData: function (res) {
                         subject_name: res.data
                     },

@@ -53,7 +53,7 @@ function requestParameter() {
 
 function myRequest(url, type, data, callback, async=true) {
   $.ajax({
-    url: 'http://localhost:8000' + url,
+    url: getHost() + url,
     type: type,
     dataType: 'json',
     data: data,
@@ -79,4 +79,8 @@ function myRequest(url, type, data, callback, async=true) {
       alert('网络错误');
     }
   });
+}
+
+function getHost() {
+  return 'http://127.0.0.1:8000'
 }

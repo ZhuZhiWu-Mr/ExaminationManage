@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>学生考试页面</title>
     <!-- https://cdn.staticfile.org/vue/2.2.2/vue.min.js -->
     <script src="../../js/vue-2.2.2.min.js"></script>
-    
+
     <!-- 引入element样式 -->
     <link rel="stylesheet" href="../../lib/element/lib/theme-chalk/index.css">
     <!-- 引入element组件库 -->
@@ -17,519 +18,481 @@
 </head>
 
 <body>
-<div id="app">
-    <div class="testPaper">
-        <div class="w">
-            <!-- 考试信息 -->
-            <div class="title">
-                <!-- {{testData}} -->
-                <h3 class="testName">{{testPaperName}}</h3>
-                <ul>
-                    <li class="test-info">截至时间：{{endTime}}</li>
-                    <li class="test-info" style="color: red;">剩余时间: {{ remainTime }}</li>
-                    <li class="test-info">
-                        <el-button type="primary" size="mini" @click="submitTestPaper" :disabled="isRead">提交试卷
-                        </el-button>
-                    </li>
-                </ul>
-            </div>
+    <div id="app">
+        <div class="testPaper">
+            <div class="w">
+                <!-- 考试信息 -->
+                <div class="title">
+                    <!-- {{testData}} -->
+                    <h3 class="testName">{{testPaperName}}</h3>
+                    <ul>
+                        <li class="test-info">截至时间：{{endTime}}</li>
+                        <li class="test-info" style="color: red;">剩余时间: {{ remainTime }}</li>
+                        <li class="test-info">
+                            <el-button type="primary" size="mini" @click="submitTestPaper" :disabled="isRead">提交试卷
+                            </el-button>
+                        </li>
+                    </ul>
+                </div>
 
-            <div class="test-content" :class="testData.examClasses.publishAnswer == 1 ? 'publishScore':''">
-                <!-- 题目内容 -->
-                <div class="topics">
+                <div class="test-content" :class="testData.examClasses.publishAnswer == 1 ? 'publishScore':''">
+                    <!-- 题目内容 -->
+                    <div class="topics">
 
-                    <div class="topic" v-for="(topics, index) in sortedTopics" :key="index">
-                        <h4>{{ bigQuestionNameMixin(topics.topicType)}}</h4><!-- 题目类型名称 -->
-                        <div class="topicsType">
+                        <div class="topic" v-for="(topics, index) in sortedTopics" :key="index">
+                            <h4>{{ bigQuestionNameMixin(topics.topicType)}}</h4><!-- 题目类型名称 -->
+                            <div class="topicsType">
 
-                            <div class="topic-content" v-for="(t, index) in topics.topic_content" :key="index">
-                                <div class="_location"></div>
-                                <!-- 题目 -->
-                                <div class="question" :class="forbid_copy? 'forbid_copy':''">
-                                    <span class="question_nunber">{{ t.index }}、</span>
-                                    {{ t.question }}
-                                    <span class="score">({{ t.score }}分)</span>
-                                </div>
+                                <div class="topic-content" v-for="(t, index) in topics.topic_content" :key="index">
+                                    <div class="_location"></div>
+                                    <!-- 题目 -->
+                                    <div class="question" :class="forbid_copy? 'forbid_copy':''">
+                                        <span class="question_nunber">{{ t.index }}、</span>
+                                        {{ t.question }}
+                                        <span class="score">({{ t.score }}分)</span>
+                                    </div>
 
-                                <!-- 单选题 -->
-                                <div class="radio" v-if="t.topicType==0">
-                                    <!-- :class="item == t.correctAnswer? 'correct':'error'"  -->
-                                    <el-radio v-for="(item, index) in t.choice" v-model="t.userAnswer[0]"
-                                              :key="index"
-                                              :label="item"
-                                              :disabled="isRead">
-                                        {{ String.fromCharCode(65+index)}}、{{ item }}
-                                    </el-radio>
-                                </div>
-
-                                <!-- 多选题 -->
-                                <div class="checkbox" v-if="t.topicType == 1">
-                                    <el-checkbox-group v-model="t.userAnswer">
-                                        <el-checkbox :label="item" v-for="(item, index) in t.choice" :key="index"
-                                                     :disabled="isRead">
+                                    <!-- 单选题 -->
+                                    <div class="radio" v-if="t.topicType==0">
+                                        <!-- :class="item == t.correctAnswer? 'correct':'error'"  -->
+                                        <el-radio v-for="(item, index) in t.choice" v-model="t.userAnswer[0]"
+                                            :key="index" :label="item" :disabled="isRead">
                                             {{ String.fromCharCode(65+index)}}、{{ item }}
-                                        </el-checkbox>
-                                    </el-checkbox-group>
-                                </div>
+                                        </el-radio>
+                                    </div>
 
-                                <!-- 判断题 -->
-                                <div class="TrueOrFalse" v-if="t.topicType == 2">
-                                    <el-radio v-model="t.userAnswer" label="0" :disabled="isRead"
-                                              :class="'true' == t.correctAnswer? 'correct':'error'">正确
-                                    </el-radio>
-                                    <el-radio v-model="t.userAnswer" label="1" :disabled="isRead"
-                                              :class="'false' == t.correctAnswer? 'correct':'error'">错误
-                                    </el-radio>
-                                </div>
+                                    <!-- 多选题 -->
+                                    <div class="checkbox" v-if="t.topicType == 1">
+                                        <el-checkbox-group v-model="t.userAnswer">
+                                            <el-checkbox :label="item" v-for="(item, index) in t.choice" :key="index"
+                                                :disabled="isRead">
+                                                {{ String.fromCharCode(65+index)}}、{{ item }}
+                                            </el-checkbox>
+                                        </el-checkbox-group>
+                                    </div>
 
-                                <!-- 填空题 -->
-                                <div class="fillInBlank" v-if="t.topicType == 3">
-                                    <div v-for="(q, index) in fillSymbolStr(t.question)" :key="index">
-                                        <el-input type="textarea" autosize
-                                                  :disabled="isRead"
-                                                  v-if="index!=fillSymbolStr(t.question).length-1"
-                                                  v-model="t.userAnswer[index]">
+                                    <!-- 判断题 -->
+                                    <div class="TrueOrFalse" v-if="t.topicType == 2">
+                                        <el-radio v-model="t.userAnswer" label="0" :disabled="isRead"
+                                            :class="'true' == t.correctAnswer? 'correct':'error'">正确
+                                        </el-radio>
+                                        <el-radio v-model="t.userAnswer" label="1" :disabled="isRead"
+                                            :class="'false' == t.correctAnswer? 'correct':'error'">错误
+                                        </el-radio>
+                                    </div>
+
+                                    <!-- 填空题 -->
+                                    <div class="fillInBlank" v-if="t.topicType == 3">
+                                        <div v-for="(q, index) in fillSymbolStr(t.question)" :key="index">
+                                            <el-input type="textarea" autosize :disabled="isRead"
+                                                v-if="index!=fillSymbolStr(t.question).length-1"
+                                                v-model="t.userAnswer[index]">
+                                            </el-input>
+                                        </div>
+                                    </div>
+
+                                    <!-- 简答题 -->
+                                    <div class="text" v-if="t.topicType == 4">
+                                        <el-input type="textarea" v-model="t.userAnswer"
+                                            :autosize="{ minRows: 3, maxRows: 10 }" :disabled="isRead">
                                         </el-input>
                                     </div>
-                                </div>
 
-                                <!-- 简答题 -->
-                                <div class="text" v-if="t.topicType == 4">
-                                    <el-input type="textarea" v-model="t.userAnswer"
-                                              :autosize="{ minRows: 3, maxRows: 10 }"
-                                              :disabled="isRead">
-                                    </el-input>
                                 </div>
-
                             </div>
+
                         </div>
+                    </div>
 
-                    </div>
-                </div>
-
-                <!-- 题目导航 -->
-                <div class="topic-nav " :class="isFixed?'isFixed':''" :style="topic_nav_style">
-                    <div class="topic-nav-describe" v-if="finishTest && testData.examClasses.publishAnswer == 1">
-                        <span class="topic-nav-but correct"> </span> 正确
-                        <span class="space"></span>
-                        <span class="topic-nav-but error"> </span> 错误
-                    </div>
-                    <div class="topic-nav-describe" v-else>
-                        <span class="topic-nav-but hasAnswer"> </span> 已答
-                        <span class="space"></span>
-                        <span class="topic-nav-but "> </span> 未答
-                    </div>
-                    <div v-for="(topics, Topics_index) in sortedTopics" :key="Topics_index">
-                        <div class="topic-nav-item">
-                            <span class="topic-nav-button"
-                                    @click="topicNav(topics.topicType,index)"
-                                    v-for="(item , index) in topics.topic_content"
-                                    :key="index"
+                    <!-- 题目导航 -->
+                    <div class="topic-nav " :class="isFixed?'isFixed':''" :style="topic_nav_style">
+                        <div class="topic-nav-describe" v-if="finishTest && testData.examClasses.publishAnswer == 1">
+                            <span class="topic-nav-but correct"> </span> 正确
+                            <span class="space"></span>
+                            <span class="topic-nav-but error"> </span> 错误
+                        </div>
+                        <div class="topic-nav-describe" v-else>
+                            <span class="topic-nav-but hasAnswer"> </span> 已答
+                            <span class="space"></span>
+                            <span class="topic-nav-but "> </span> 未答
+                        </div>
+                        <div v-for="(topics, Topics_index) in sortedTopics" :key="Topics_index">
+                            <div class="topic-nav-item">
+                                <span class="topic-nav-button" @click="topicNav(topics.topicType,index)"
+                                    v-for="(item , index) in topics.topic_content" :key="index"
                                     :class="emptyAnswer(item)">
-                                {{ topicNavIndex_mixin(topics.topicType,index)}}
-                    </span>
+                                    {{ topicNavIndex_mixin(topics.topicType,index)}}
+                                </span>
+                            </div>
+
+                        </div>
+                        <!-- 摄像头 -->
+                        <video autoplay id='cameraVideo'
+                            style="width: 300px;height: 300px;border: 1px solid #ccc;"></video>
                     </div>
-                        
-                    </div>
-                    <!-- 摄像头 -->
-                    <video autoplay id='cameraVideo' style="width: 300px;height: 300px;border: 1px solid #ccc;"></video>
-                    <!-- 录屏 -->
-                    <!-- <button id="start-button" @click="startRecord()">开始录制</button>
-                    <button id="stop-button" @click="stopRecord()">停止录制</button>
-                    <button id="download-button" @click="download()">下载视频</button>
-                    <video id="preview" style="width: 200px;height: 200px;background-color: #000;" autoplay></video> -->
 
                 </div>
 
-            </div>
+                <div class="back-top" @click="backTop_mixin()">
+                    <i class="el-icon-arrow-up"></i>
+                </div>
 
-            <div class="back-top" @click="backTop_mixin()">
-                <i class="el-icon-arrow-up"></i>
             </div>
-
         </div>
     </div>
-</div>
-<script src="../../js/utils.js"></script>
-<script src="../../lib/layui/layui.js" charset="utf-8"></script>
-<script>
-    layui.use(['util','layer', 'laydate'], function () {
-        var layer = layui.layer,
-            laydate = layui.laydate,
-            util = layui.util
+    <script src="../../js/utils.js"></script>
+    <script src="../../lib/layui/layui.js" charset="utf-8"></script>
+    <script>
+        layui.use(['util', 'layer'], function () {
+            var layer = layui.layer,
+                util = layui.util
 
-        new Vue({
-        el: '#app',
-        data() {
-            return {
-                testPaperName: '',
-                // 考试结束时间
-                endTime: '', 
-                userName: "test",
-                recorder: "",
-                //按题目类型分类好的题目数据
-                //题目类型==>  0:单选题  1:多选题  2:判断题  3:填空题  4:简答题
-                sortedTopics: [],
-                //试卷数据
-                testData: {
-                    examClasses: {},
-                    userGrade: {},
-                    switchPage: 3
+            new Vue({
+                el: '#app',
+                data() {
+                    return {
+                        testPaperName: '',
+                        // 考试结束时间
+                        endTime: '',
+                        userName: "test",
+                        recorder: "",
+                        //按题目类型分类好的题目数据
+                        //题目类型==>  0:单选题  1:多选题  2:判断题  3:填空题  4:简答题
+                        sortedTopics: [],
+                        //试卷数据
+                        testData: {
+                            examClasses: {},
+                            userGrade: {},
+                            switchPage: 3
+                        },
+                        examClassesData: {},
+
+                        remainTime: "01:00:00", //考试剩余时间
+                        expendTime: 0, //考试用时(秒)
+                        isRead: false, //是否为只读模式
+                        forbid_copy: true, //是否禁止复制文本
+                        switchPage: 0,
+
+                        isPublishAnswer: false, //是否公布答案
+                        finishTest: false, //是否完成试卷
+                        //侧导航栏是否悬浮
+                        isFixed: false,
+                        topic_nav_style: "top:0px",
+                        currentWebmData: 0,
+                        recording: false,
+                        paused: false,
+                        mediaStream: "",
+                        mediaRecord: null,
+                        videoBuffer: []
+                    };
                 },
-                examClassesData: {},
-
-                remainTime: "01:00:00", //考试剩余时间
-                expendTime: 0, //考试用时(秒)
-                isRead: false, //是否为只读模式
-                forbid_copy: true, //是否禁止复制文本
-                switchPage: 0,
-
-                isPublishAnswer: false, //是否公布答案
-                finishTest: false, //是否完成试卷
-                //侧导航栏是否悬浮
-                isFixed: false,
-                topic_nav_style: "top:0px",
-                currentWebmData:0,
-                recording:false,
-                paused:false,
-                mediaStream:"",
-                mediaRecord: null,
-                videoBuffer: []
-            };
-        },
-        computed: {
-            //按填空符(三个下划线)划分字符串
-            fillSymbolStr() {
-                return function (str) {
-                    var q = str.split("___");
-                    return q;
-                };
-            },
-        },
-        mounted() {
-            var _this = this
-            myRequest('/courses/stu_start_test/' + this.getQueryVariable("testPaperId"), 'GET', {}, function(rs){
-                console.log("rs", rs)
-                if (rs.code == 0) {
-                    _this.sortedTopics = rs.data.allSubject;
-                    _this.testPaperName = rs.data.testPaperName;
-                    _this.endTime = rs.data.endTime
-                    _this.openCamera();
-                    _this.startRecord();
-                    window.addEventListener("scroll", this.handleScroll);
-                    window.addEventListener("visibilitychange", this.visibilitychange);
-                    _this.countDown(rs.data.endTime);
-                }
-            });
-            
-        },
-        created() {
-        },
-        methods: {
-            countDown(endTime) {
-                /*
-                倒计时
-                */
-                _this = this
-                var thisTimer, setCountdown = function(y, M, d, H, m, s){
-                    var _endTime = new Date(y, M||0, d||1, H||0, m||0, s||0) //结束日期
-                    ,serverTime = new Date(); //假设为当前服务器时间，这里采用的是本地时间，实际使用一般是取服务端的
-                    
-                    clearTimeout(thisTimer);
-                    util.countdown(_endTime, serverTime, function(date, serverTime, timer){
-                        var str = date[0] + '天' + date[1] + '时' +  date[2] + '分' + date[3] + '秒';
-                        _this.remainTime = str
-                        thisTimer = timer;
+                computed: {
+                    //按填空符(三个下划线)划分字符串
+                    fillSymbolStr() {
+                        return function (str) {
+                            var q = str.split("___");
+                            return q;
+                        };
+                    },
+                },
+                mounted() {
+                    var _this = this
+                    myRequest('/courses/stu_start_test/' + this.getQueryVariable("testPaperId"), 'GET', {}, function (rs) {
+                        console.log("rs", rs)
+                        if (rs.code == 0) {
+                            _this.sortedTopics = rs.data.allSubject;
+                            _this.testPaperName = rs.data.testPaperName;
+                            _this.endTime = rs.data.endTime
+                            _this.openCamera();
+                            _this.startRecord();
+                            window.addEventListener("scroll", this.handleScroll);
+                            window.addEventListener("visibilitychange", this.visibilitychange);
+                            _this.countDown(rs.data.endTime);
+                        }
                     });
-                };
-            
-                timeArr = endTime.replace(" ", ":").replace(/\:/g, "-").split("-");
-                var year = timeArr[0];
-                var month = timeArr[1];
-                var date = timeArr[2];
-                var hours = timeArr[3];
-                var minutes = timeArr[4];
-                var seconds = timeArr[5];
-                setCountdown(year, month - 1, date, hours, minutes, seconds);
-            },
-            openCamera() {
-                var video = $("#cameraVideo").get(0)
-                var cameraSuccess = function (stream) {
-                    console.log('摄像头开启成功' + stream)
-                    try {
-                        video.srcObject = stream;
 
-                    } catch (error) {
-                        video.src = window.URL.createObjectURL(stream);
-                    }
-                }
-                var cameraError = (error) => {
-                    alert('调用失败')
-                }
-                navigator.getUserMedia({ video: true, audio: false }, cameraSuccess, cameraError)
-            },
-            submitTestPaper() {
-                //提交试卷
-                var newSortedTopics = []
-                var _this = this
-                for (let i = 0; i < this.sortedTopics.length; i++) {
-                    let topic = []
-                    for (let j = 0; j < this.sortedTopics[i].topic_content.length; j++) {
-                        if (this.sortedTopics[i].topic_content[j].userAnswer != "") {
-                            topic.push(this.sortedTopics[i].topic_content[j])
-                        }
-                    }
-                    newSortedTopics.push({
-                        "topicType" : this.sortedTopics[i].topicType,
-                        "topic_content" :  topic
-                    })
-                }
-                // 提交试卷
-                myRequest("/courses/commit_test_paper", "PUT", {"sortedTopics": JSON.stringify(newSortedTopics)}, function(rs){
-                    alert("提交成功")
-                })
-                // 停止录屏
-                this.stopRecord();
-                // 上传视频
-                this.download();
-                this.isRead = true;
-            },
-            handleScroll() {
-                //滚动事件
-                let scrollTop =
-                    window.pageYOffset ||
-                    document.documentElement.scrollTop ||
-                    document.body.scrollTop; // 滚动条偏移量
-                if (scrollTop > 154) {
-                    this.topic_nav_style = "top:" + (scrollTop + 62) + "px";
-                    this.isFixed = true;
-                } else {
-                    this.isFixed = false;
-                }
-            },
-            visibilitychange(){
-            //   if(this.testData.switchPage === -1){
-            //     return
-            //   }
-            //   if (document.visibilityState == "visible") {
-            //   }
-            //   if (document.visibilityState == "hidden") {
-            //     this.switchPage += 1;
-            //     if(this.switchPage >= this.testData.switchPage){
-            //       this.submitTestPaper();
-            //     }else{
-            //       this.$msgbox({
-            //         title: '警告',
-            //         type: 'warning',
-            //         message: '页面已被切换，如果次数为0将会自动提交试卷！ 剩余可以切换次数：' + (this.testData.switchPage-this.switchPage),
-            //         confirmButtonText: '确定',
-            //       });
-            //     }
-            //   }
-            },
-            getQueryVariable(variable) {
-                const query = window.location.search.substring(1);
-                const vars = query.split("&");
-                for (let i=0; i<vars.length; i++) {
-                   const pair = vars[i].split("=");
-                   if(pair[0] == variable){
-                       return pair[1];
-                   }
-                }
-            },
-            topicNav(type, index) {
-                //点击题号定位到题目位置
-                var i = this.topicNavIndex_mixin(type, index);
-                console.log(i);
-                document.getElementsByClassName("_location")[i - 1].scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
-            },
-            
-            emptyAnswer(val) {
-                //题目导航按钮颜色
-                if (this.finishTest === true && this.testData.examClasses.publishAnswer == 1) {
-                    //已完成试卷 与 是否公布答案
-                    if (val.userScore == val.score) {
-                        console.log(val);
-                        return "correct";
-                    } else {
-                        return "error";
-                    }
-                    
-                } else {
-                    //未完成试卷
-                    //填空题
-                    if (val.topicType == 3) {
+                },
+                created() {
+                },
+                methods: {
+                    countDown(endTime) {
+                        /*
+                        倒计时
+                        */
+                        _this = this
+                        var thisTimer, setCountdown = function (y, M, d, H, m, s) {
+                            //结束日期
+                            var _endTime = new Date(
+                                y, M || 0, d || 1, H || 0, m || 0, s || 0
+                            ) 
+                            //假设为当前服务器时间，这里采用的是本地时间，实际使用一般是取服务端的
+                                , serverTime = new Date(); 
 
-                        let q = val.question.split("___")
-                        if (q.length - 1 != val.userAnswer.length) {
-                            return ""
-                        }
+                            clearTimeout(thisTimer);
+                            util.countdown(_endTime, serverTime, function (date, serverTime, timer) {
+                                var str = date[0] + '天' + date[1] + '时' + date[2] + '分' + date[3] + '秒';
+                                _this.remainTime = str
+                                thisTimer = timer;
+                            });
+                        };
 
-                        for (let item of val.userAnswer) {
-                            if (item == "") {
-                                return ""
+                        timeArr = endTime.replace(" ", ":").replace(/\:/g, "-").split("-");
+                        var year = timeArr[0];
+                        var month = timeArr[1];
+                        var date = timeArr[2];
+                        var hours = timeArr[3];
+                        var minutes = timeArr[4];
+                        var seconds = timeArr[5];
+                        setCountdown(year, month - 1, date, hours, minutes, seconds);
+                    },
+                    openCamera() {
+                        var video = $("#cameraVideo").get(0)
+                        var cameraSuccess = function (stream) {
+                            console.log('摄像头开启成功' + stream)
+                            try {
+                                video.srcObject = stream;
+
+                            } catch (error) {
+                                video.src = window.URL.createObjectURL(stream);
                             }
                         }
-                    }
-                    //单选/判断/简答
-                    if (val.userAnswer.length == 0) {
-                        return "";
-                    }
-
-                    return 'hasAnswer';
-                }
-            },
-            topicTypeName_mixin(type) {
-                switch (type) {
-                    case 0:
-                        return '单选题';
-                    case 1:
-                        return '多选题';
-                    case 2:
-                        return '判断题';
-                    case 3:
-                        return '填空题';
-                    case 4:
-                        return '简答题';
-                }
-            },
-            bigQuestionNameMixin(type) {
-                //答题类型名称
-                switch (type) {
-                    case 0:
-                        return '一、单项选择题';
-                    case 1:
-                        return '二、多项选择题';
-                    case 2:
-                        return '三、判断题';
-                    case 3:
-                        return '四、填空题';
-                    case 4:
-                        return '六、简答题';
-                }
-            },
-            backTop_mixin() {
-                //回到顶部
-                document.body.scrollTop = document.documentElement.scrollTop = 0;
-            },
-            topicNavIndex_mixin(Topics_index, index) {
-                //计算題号
-                var navIndex = 0;
-                for (let i = 0; i < Topics_index; i++) {
-                    navIndex = navIndex + this.sortedTopics[i].topic_content.length;
-                }
-                return navIndex + index + 1;
-            },
-            download() {
-                if (this.videoBuffer == null || this.videoBuffer.length == 0){
-                    alert("没有视频数据")
-                    return
-                }
-                const formData = new FormData()
-                // const blob = new Blob(this.videoBuffer, {type: 'video/webm'})
-                const blob = new Blob(this.videoBuffer, {type: 'video/webm'})
-                
-                this.uploadFile(blob)
-                // let blob = new Blob(this.videoBuffer, {
-                //     type: "video/webm"
-                // });
-                // this.saveMedia(blob);
-                // let url = URL.createObjectURL(blob);
-                // console.log(url)
-                // let a = document.createElement("a");
-                // document.body.appendChild(a);
-                // a.style = "display: none";
-                // a.href = url;
-                // a.download = "test.webm";
-                // a.click();
-                // window.URL.revokeObjectURL(url);
-            },
-            uploadFile(blob){
-                var file = new File([blob], "media_.mp4");
-                var formData = new FormData();
-                formData.append('file', file);
-                formData.append('testPaperId', this.getQueryVariable("testPaperId"));
-                console.log(formData);
-                console.log("# 准备上传, fileName="+file.name +", size="+ parseInt(file.size/1024)+" KB");
-                $.ajax({
-                    type:"POST",
-                    url: "http://localhost:8000/courses/commit_test_paper",
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        'Authorization': getCookie("token")
+                        var cameraError = (error) => {
+                            alert('调用失败')
+                        }
+                        navigator.getUserMedia({ video: true, audio: false }, cameraSuccess, cameraError)
                     },
-                    success:function (){
-                        alert("上传视频成功!");
+                    submitTestPaper() {
+                        //提交试卷
+                        var newSortedTopics = []
+                        var _this = this
+                        for (let i = 0; i < this.sortedTopics.length; i++) {
+                            let topic = []
+                            for (let j = 0; j < this.sortedTopics[i].topic_content.length; j++) {
+                                if (this.sortedTopics[i].topic_content[j].userAnswer != "") {
+                                    topic.push(this.sortedTopics[i].topic_content[j])
+                                }
+                            }
+                            newSortedTopics.push({
+                                "topicType": this.sortedTopics[i].topicType,
+                                "topic_content": topic
+                            })
+                        }
+                        // 提交试卷
+                        myRequest("/courses/commit_test_paper", "PUT", { "sortedTopics": JSON.stringify(newSortedTopics) }, function (rs) {
+                            alert("提交成功")
+                        })
+                        // 停止录屏
+                        this.stopRecord();
+                        // 上传视频
+                        this.download();
+                        this.isRead = true;
                     },
-                    error : function(data) {
-                        console.log(data)
-                        alert("上传视频失败!");
-                    }
-                });
-            },
-            saveMedia(blob) {
-                let reader = new FileReader();
-                reader.onload = () => {
-                    let buffer = new Buffer(reader.result);
-                    fs.writeFile('test'+i+'.mp4', buffer, {}, (err, res) => {
-                    if (err) return console.error(err);
-                    });
-                    i++;
-                };
-                reader.onerror = err => console.error(err);
-                reader.readAsArrayBuffer(blob);
-            },
-            stopRecord() {
-                if (this.mediaStream){
-                    for (let track of this.mediaStream.getTracks()) {
-                        track.stop()
-                    }
-                }
-                this.mediaRecord && this.mediaRecord.state !== 'inactive' && this.mediaRecord.stop()
-            },
-            reset() {
-                this.stopRecord()
-                this.mediaRecord = null
-                this.mediaStream = null
-                this.videoBuffer = []
-            },
-            async startRecord() {
-                var _this = this
-                if (!navigator.mediaDevices && !navigator.mediaDevices.getDisplayMedia){
-                    alert("当前浏览器不支持屏幕捕捉")
-                    return
-                }
-                this.reset()
+                    handleScroll() {
+                        //滚动事件
+                        let scrollTop =
+                            window.pageYOffset ||
+                            document.documentElement.scrollTop ||
+                            document.body.scrollTop; // 滚动条偏移量
+                        if (scrollTop > 154) {
+                            this.topic_nav_style = "top:" + (scrollTop + 62) + "px";
+                            this.isFixed = true;
+                        } else {
+                            this.isFixed = false;
+                        }
+                    },
+                    visibilitychange() {
+                        //   if(this.testData.switchPage === -1){
+                        //     return
+                        //   }
+                        //   if (document.visibilityState == "visible") {
+                        //   }
+                        //   if (document.visibilityState == "hidden") {
+                        //     this.switchPage += 1;
+                        //     if(this.switchPage >= this.testData.switchPage){
+                        //       this.submitTestPaper();
+                        //     }else{
+                        //       this.$msgbox({
+                        //         title: '警告',
+                        //         type: 'warning',
+                        //         message: '页面已被切换，如果次数为0将会自动提交试卷！ 剩余可以切换次数：' + (this.testData.switchPage-this.switchPage),
+                        //         confirmButtonText: '确定',
+                        //       });
+                        //     }
+                        //   }
+                    },
+                    getQueryVariable(variable) {
+                        const query = window.location.search.substring(1);
+                        const vars = query.split("&");
+                        for (let i = 0; i < vars.length; i++) {
+                            const pair = vars[i].split("=");
+                            if (pair[0] == variable) {
+                                return pair[1];
+                            }
+                        }
+                    },
+                    topicNav(type, index) {
+                        //点击题号定位到题目位置
+                        var i = this.topicNavIndex_mixin(type, index);
+                        console.log(i);
+                        document.getElementsByClassName("_location")[i - 1].scrollIntoView({
+                            behavior: "smooth",
+                            block: "start"
+                        });
+                    },
 
-                //获取视频流，这时候会弹出用户选择框，前提用户设备支持
-                this.mediaStream = await navigator.mediaDevices.getDisplayMedia()
-                
-                this.mediaRecord = new MediaRecorder(this.mediaStream,{
-                    mimeType: 'video/webm;codecs=vp9',
-                    audioBitsPerSecond : 128000, //音频码率
-                    videoBitsPerSecond : 250000000, //视频码率
-                })
-                console.log(this.mediaRecord, "====1")
-                this.mediaRecord.ondataavailable = function(e){
-                    if (e.data.size > 0){
-                        console.info(typeof _this.videoBuffer,"视频数据可用", e)
-                        _this.videoBuffer.push(e.data)
+                    emptyAnswer(val) {
+                        //题目导航按钮颜色
+                        if (this.finishTest === true && this.testData.examClasses.publishAnswer == 1) {
+                            //已完成试卷 与 是否公布答案
+                            if (val.userScore == val.score) {
+                                console.log(val);
+                                return "correct";
+                            } else {
+                                return "error";
+                            }
+
+                        } else {
+                            //未完成试卷
+                            //填空题
+                            if (val.topicType == 3) {
+
+                                let q = val.question.split("___")
+                                if (q.length - 1 != val.userAnswer.length) {
+                                    return ""
+                                }
+
+                                for (let item of val.userAnswer) {
+                                    if (item == "") {
+                                        return ""
+                                    }
+                                }
+                            }
+                            //单选/判断/简答
+                            if (val.userAnswer.length == 0) {
+                                return "";
+                            }
+
+                            return 'hasAnswer';
+                        }
+                    },
+                    topicTypeName_mixin(type) {
+                        switch (type) {
+                            case 0:
+                                return '单选题';
+                            case 1:
+                                return '多选题';
+                            case 2:
+                                return '判断题';
+                            case 3:
+                                return '填空题';
+                            case 4:
+                                return '简答题';
+                        }
+                    },
+                    bigQuestionNameMixin(type) {
+                        //答题类型名称
+                        switch (type) {
+                            case 0:
+                                return '一、单项选择题';
+                            case 1:
+                                return '二、多项选择题';
+                            case 2:
+                                return '三、判断题';
+                            case 3:
+                                return '四、填空题';
+                            case 4:
+                                return '六、简答题';
+                        }
+                    },
+                    backTop_mixin() {
+                        //回到顶部
+                        document.body.scrollTop = document.documentElement.scrollTop = 0;
+                    },
+                    topicNavIndex_mixin(Topics_index, index) {
+                        //计算題号
+                        var navIndex = 0;
+                        for (let i = 0; i < Topics_index; i++) {
+                            navIndex = navIndex + this.sortedTopics[i].topic_content.length;
+                        }
+                        return navIndex + index + 1;
+                    },
+                    download() {
+                        if (this.videoBuffer == null || this.videoBuffer.length == 0) {
+                            alert("没有视频数据")
+                            return
+                        }
+                        const formData = new FormData()
+                        const blob = new Blob(this.videoBuffer, { type: 'video/webm' })
+                        this.uploadFile(blob)
+                    },
+                    uploadFile(blob) {
+                        var file = new File([blob], "media_.mp4");
+                        var formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('testPaperId', this.getQueryVariable("testPaperId"));
+                        console.log(formData);
+                        console.log("# 准备上传, fileName=" + file.name + ", size=" + parseInt(file.size / 1024) + " KB");
+                        $.ajax({
+                            type: "POST",
+                            url: "http://localhost:8000/courses/commit_test_paper",
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            headers: {
+                                'Authorization': getCookie("token")
+                            },
+                            success: function () {
+                                alert("上传视频成功!");
+                            },
+                            error: function (data) {
+                                console.log(data)
+                                alert("上传视频失败!");
+                            }
+                        });
+                    },
+                    stopRecord() {
+                        if (this.mediaStream) {
+                            for (let track of this.mediaStream.getTracks()) {
+                                track.stop()
+                            }
+                        }
+                        this.mediaRecord && this.mediaRecord.state !== 'inactive' && this.mediaRecord.stop()
+                    },
+                    reset() {
+                        this.stopRecord()
+                        this.mediaRecord = null
+                        this.mediaStream = null
+                        this.videoBuffer = []
+                    },
+                    async startRecord() {
+                        var _this = this
+                        if (!navigator.mediaDevices && !navigator.mediaDevices.getDisplayMedia) {
+                            alert("当前浏览器不支持屏幕捕捉")
+                            return
+                        }
+                        this.reset()
+
+                        //获取视频流，这时候会弹出用户选择框，前提用户设备支持
+                        this.mediaStream = await navigator.mediaDevices.getDisplayMedia()
+
+                        this.mediaRecord = new MediaRecorder(this.mediaStream, {
+                            mimeType: 'video/webm;codecs=vp9',
+                            audioBitsPerSecond: 128000, //音频码率
+                            videoBitsPerSecond: 250000000, //视频码率
+                        })
+                        console.log(this.mediaRecord, "====1")
+                        this.mediaRecord.ondataavailable = function (e) {
+                            if (e.data.size > 0) {
+                                console.info(typeof _this.videoBuffer, "视频数据可用", e)
+                                _this.videoBuffer.push(e.data)
+                            }
+                        }
+                        this.mediaRecord.start(1000) //每隔1s保存一下
                     }
                 }
-                this. mediaRecord.start(1000) //每隔1s保存一下
-
-                //视频预览
-                videoPreview = document.getElementById('preview')
-                videoPreview.srcObject = this.mediaStream
-            }
-        }
-    })
-    })
-</script>
+            })
+        })
+    </script>
 </body>
+
 </html>

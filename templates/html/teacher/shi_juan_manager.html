@@ -41,13 +41,16 @@
 
     <table class="layui-hide" id="demo" lay-filter="test"></table>
 
-    <script type="text/html" id="barDemo">
-			<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">试卷详情</a>
-    <!-- <a class="layui-btn layui-btn-xs" lay-event="edit"></a> -->
-    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    <script type="text/html" id="toolbarDemo">
+        <div class="layui-btn-container">
+          <button class="layui-btn layui-btn-sm" lay-event="add">添加试卷</button>
+        </div>
     </script>
 
-    <table class="layui-hide" id="demo" lay-filter="test"></table>
+    <script type="text/html" id="barDemo">
+		<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">试卷详情</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
 
     <script src="../../config.js" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -99,12 +102,16 @@
                 //执行一个 table 实例
                 table.render({
                     elem: '#demo',
-                    // height: 420,
-
                     url: getHost() + '/courses/list_translate_class', //数据接口
-                    // url: 'date_test.json',
                     title: '用户表',
-                    toolbar: 'default', //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
+                     //开启工具栏
+                    toolbar: '#toolbarDemo',
+                    defaultToolbar: ['filter', 'exports', 'print', { 
+                        //自定义头部工具栏右侧图标。如无需自定义，去除该参数即可
+                        title: '提示',
+                        layEvent: 'LAYTABLE_TIPS',
+                        icon: 'layui-icon-tips'
+                    }],
                     cellMinWidth: 80, //全局定义所有常规单元格最小宽度,
                     parseData: function (res) {
                         subject_name: res.data
@@ -141,7 +148,8 @@
                             field: 'start_time',
                             title: '开始时间',
                             sort: true,
-                            align: 'center',
+                            edit:'tim',
+                            align: 'center'
                         }, {
                             field: 'end_time',
                             title: '结束时间',
@@ -167,57 +175,6 @@
                 switch (obj.event) {
                     case 'add':
                         setTop();
-                        break;
-                    case 'update':
-                        layer.alert('请单击表格，修改对应信息，修改之后按回车');
-                        break;
-                    case 'delete':
-                        if (data.length === 0) {
-                            layer.msg('请在右侧删除');
-                        } else {
-                            layer.confirm('确定删除选中的数据吗？', {
-                                icon: 3,
-                                title: '提示信息'
-                            }, function (index) {
-                                //layui中找到CheckBox所在的行，并遍历找到行的顺序
-                                $('div.layui-table-body table tbody input[name="layTableCheckbox"]:checked')
-                                    .each(function () {
-                                        var ids = "";
-                                        for (var i = 0; i < data.length; i++) {
-                                            if (i == data.length - 1) {
-                                                ids += data[i].id
-                                            } else {
-                                                ids += data[i].id + ",";
-                                            }
-                                        }
-                                        // 遍历选中的checkbox
-                                        n = $(this).parents('tbody tr')
-                                            .index() // 获取checkbox所在行的顺序
-                                        //移除行
-                                        $('div.layui-table-body table tbody ')
-                                            .find('tr:eq(' +
-                                                n + ')').remove()
-                                        //如果是全选移除，就将全选CheckBox还原为未选中状态
-                                        $('div.layui-table-header table thead div.layui-unselect.layui-form-checkbox')
-                                            .removeClass('layui-form-checked')
-
-                                        $.post(getHost() + "/delete_all_projects_undertaken", {
-                                            deleteData: ids
-                                        }, function (data, status) {
-                                            if (data.code == 0) {
-                                                layer.msg("删除成功");
-                                            } else {
-                                                layer.msg("已经删除，请刷新页面");
-                                            }
-                                        }).error(function () {
-                                            layer.msg("请检查网络后重试");
-                                        });
-                                    })
-                                layer.close(index)
-                            })
-
-
-                        }
                         break;
                 };
             });
