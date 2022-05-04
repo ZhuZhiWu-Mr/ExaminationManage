@@ -1,5 +1,6 @@
 import datetime
 import json
+import random
 import time
 from functools import wraps
 
@@ -362,12 +363,10 @@ class PutTranslateView(View):
         return JsonResponse
 
 
-'''
-    试卷
-'''
-
-
 class TranslateClassView(View):
+    """
+    试卷
+    """
     def get(self, request):
         result = {"code": err_code.SUCCESS, "msg111": "", "data": []}
         translate_class = TranslateClass.objects.all()
@@ -390,13 +389,11 @@ class TranslateClassView(View):
         try:
             add_data = request.POST.get("addData", "")
             add_data_json = json.loads(add_data)
-            # score = request.POST.get("score")
-            # subject_unswer = request.POST.get("subject_unswer")
         except:
             result["code"] = err_code.ADD_ERROR
             result["msg"] = "缺少参数"
             return JsonResponse(result)
-
+        # 班级
         classes_id = add_data_json["classes_name"]
         exam_class = add_data_json["shijuanming"]
 
@@ -407,8 +404,6 @@ class TranslateClassView(View):
             return JsonResponse(result)
 
         translate_class = TranslateClass()
-        print(classes_id)
-        print(exam_class)
         translate_class.classes_id = classes_id
         translate_class.class_name = exam_class
         try:
@@ -417,6 +412,26 @@ class TranslateClassView(View):
             result["code"] = err_code.ADD_ERROR
             result["msg"] = "添加失败"
             return JsonResponse(result)
+        # 给试卷随机添加20道题目
+        translate_class = TranslateClass.objects.filter(class_name=exam_class).first()
+        single_choice = random.sample(list(Subject.objects.filter(type=SINGLE_CHOICE).values('id')), 7)
+        multiple_choice = random.sample(list(Subject.objects.filter(type=MULTIPLE_CHOICE).values('id')), 7)
+        judgment = random.sample(list(Subject.objects.filter(type=JUDGMENT).values('id')), 6)
+        for single in single_choice:
+            translate = Translate()
+            translate.subject_id = single['id']
+            translate.translate_class = translate_class
+            translate.save()
+        for multiple in multiple_choice:
+            translate = Translate()
+            translate.subject_id = multiple['id']
+            translate.translate_class = translate_class
+            translate.save()
+        for jud in judgment:
+            translate = Translate()
+            translate.subject_id = jud['id']
+            translate.translate_class = translate_class
+            translate.save()
         return JsonResponse(result)
 
 
