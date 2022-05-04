@@ -396,6 +396,9 @@ class TranslateClassView(View):
         # 班级
         classes_id = add_data_json["classes_name"]
         exam_class = add_data_json["shijuanming"]
+        start_time = add_data_json["start_time"]
+        end_time = add_data_json["end_time"]
+
 
         translate_class_count = TranslateClass.objects.filter(class_name=exam_class).count()
         if translate_class_count > 0:
@@ -406,6 +409,8 @@ class TranslateClassView(View):
         translate_class = TranslateClass()
         translate_class.classes_id = classes_id
         translate_class.class_name = exam_class
+        translate_class.start_time = start_time
+        translate_class.end_time = end_time
         try:
             translate_class.save()
         except BaseException:
@@ -550,7 +555,7 @@ class StudentSubjectView(View):
                 "stu_number": student_subject['stu_number'],
                 "the_name": student_subject['the_name'],
                 "sum_score": student_subject['sum_score'],
-                "recording_url": record.file_name if record else ""
+                "recording_url": 'http://127.0.0.1:8000/' + record.file_name if record else ""
             })
 
         result["count"] = student_subjects.count()
