@@ -13,7 +13,6 @@ from django.core import serializers
 from django.db.models import F, Sum
 
 from ExaminationManage.settings import UPLOAD_PATH
-from . import score_util
 from .models import (
     Subject,
     StudentSubject,
@@ -443,16 +442,12 @@ class TranslateClassView(View):
 class DelTranslateClass(View):
     def post(self, request, pk):
         result = {"code": err_code.SUCCESS, "msg": "", "data": ""}
-        translate_class = None
         try:
-            translate_class = TranslateClass.objects.get(id=pk)
+            TranslateClass.objects.filter(id=pk).delete()
+            Translate.objects.filter(translate_class=pk).delete()
+            StudentSubject.objects.filter(translate_class=pk).delete()
+            StudentRecordingScreen.objects.filter(translate_class=pk).delete()
         except Subject.DoesNotExist:
-            result["code"] = err_code.DELETE_ERROR
-            return JsonResponse(result)
-
-        try:
-            translate_class.delete()
-        except:
             result["msg"] = "删除失败"
             result["code"] = err_code.ADD_ERROR
             return JsonResponse(result)
@@ -555,7 +550,7 @@ class StudentSubjectView(View):
                 "stu_number": student_subject['stu_number'],
                 "the_name": student_subject['the_name'],
                 "sum_score": student_subject['sum_score'],
-                "recording_url": 'http://127.0.0.1:8000/' + record.file_name if record else ""
+                "recording_url": 'http://127.0.0.1:8000/static/' + record.file_name if record else ""
             })
 
         result["count"] = student_subjects.count()

@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 import pymysql
 
@@ -29,7 +29,11 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # Application definition
+STATIC_URL = '/upload/'
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "upload"),
+]
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -178,3 +182,6 @@ ALLOWED_HOSTS = ['*']
 
 # 上传录屏路径
 UPLOAD_PATH = 'upload'
+
+if not os.path.exists(UPLOAD_PATH):
+    os.makedirs(UPLOAD_PATH)
